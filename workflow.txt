@@ -1,0 +1,11 @@
+1. Load in map data and spawn point
+2. Convert map data to horizontal and vertical edges using xylines_to_edges from map_to_polygons
+3. Find all line segment intersections and cut at all intersection points using intersect_and_cut from map_to_polygon
+4. Remove doubles to create multiple polygons using remove_doubles from remove_doubles
+5. Create contour vertices lists using detect_contours from detect_contours
+6. Inflate contours
+7. Run new intersect and cut, remove doubles
+8. Create new contours
+
+Done, have properly inflated contours of the map.
+
