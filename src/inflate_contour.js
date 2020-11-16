@@ -3,13 +3,19 @@ const { remove_doubles } = require("./remove_doubles");
 const { intersect_lines, line_point_pair_to_offset, subtract_points_2d, distance_2d, cross_product_2d, normalize, dot_product_2d, angle_between, vertices_equal, midpoint, multiply_scalar_2d, rot90, add_points_2d } = require("./geometry");
 const { detect_contours, contours_into_vert_edge_list } = require("./detect_contours");
 
-
+/**
+ * Inflate previously generated contours
+ *
+ * @param {Point[][]} contours
+ * @returns {Point[][]}
+ */
 function inflate_contours(contours) {
 
     console.log("Inflating...");
     const inflated_contours = [];
     for (const contour of contours) {
         // console.log(`Input length: ${contour.length} vertices.`);
+        /** @type {Point[][]} */
         const generated_contour = [];
         for (let i = 0; i < contour.length; i++) {
             const v0_idx = i;
@@ -46,9 +52,16 @@ function inflate_contours(contours) {
     return inflated_contours;
 }
 
-
+/**
+ *
+ * @param {Point} v1
+ * @param {Point} v2
+ * @param {Point} v3
+ * @returns {Point[]}
+ */
 function create_inflated_points_by_vertices(v1, v2, v3) {
     // create contours for v2 vertex
+    /** @type {Point[]} */
     const new_points = [];
     // calculate normal vector for both
     const n1 = rot90(normalize(subtract_points_2d(v2, v1)));
@@ -78,17 +91,35 @@ function create_inflated_points_by_vertices(v1, v2, v3) {
     return new_points;
 }
 
+/**
+ *
+ * @param {Point} v
+ * @param {Point} n1
+ * @param {Point} n2
+ * @returns {Point}
+ */
 function move_by_normals(v, n1, n2) {
     const d1 = direction_to_char_offset(n1);
     const d2 = direction_to_char_offset(n2);
     return add_points_2d(add_points_2d(v, d1), d2);
 }
 
+/**
+ *
+ * @param {Point} v
+ * @param {Point} n1
+ * @returns {Point}
+ */
 function move_by_normal(v, n1) {
     const d = direction_to_char_offset(n1);
     return add_points_2d(v, d);
 }
 
+/**
+ *
+ * @param {Point} direction
+ * @returns {Point}
+ */
 function direction_to_char_offset(direction) {
     // TODO: get programmatically?
     const h_offset = 8; // from character.base.h, how much to move walls left or right
@@ -96,44 +127,44 @@ function direction_to_char_offset(direction) {
     const v_up_offset = 2; // from character.base.vn  // upwards (decrease y)
     // 2 pixels up, 7 pixels down
 
-    const [x, y] = direction;
+    const { x, y } = direction;
     if (x < -0.5) {
-        return [-h_offset, 0];
+        return { x: -h_offset, y: 0 };
     } else if (x > 0.5) {
-        return [h_offset, 0];
+        return { x: h_offset, y: 0 };
     } else if (y < -0.5) {
-        return [0, -v_up_offset];
+        return { x: 0, y: -v_up_offset };
     } else {
-        return [0, v_down_offset];
+        return { x: 0, y: v_down_offset };
     }
 }
 
 
 function test_fn() {
     const { data, spawns } = require("./map_data/winter_inn.json");
-    const spawn_pos = [spawns[0][0], spawns[0][1]];
+    const spawn_pos = { x: spawns[0][0], y: spawns[0][1] };
     const [horizontal_edges, vertical_edges] = xylines_to_edges(data);
     console.log(`${horizontal_edges.length} horizontal edges and ${vertical_edges.length} vertical edges`);
 
     // Test example, single line that is inflated by two vertices:
-    horizontal_edges.push([[150, -20], [220, -20]]);
+    horizontal_edges.push({ p1: { x: 150, y: -20 }, p2: { x: 220, y: -20 } });
 
 
     // Test example, handle single horiz line poly:
-    horizontal_edges.push([[20, -20], [50, -20]]);
+    horizontal_edges.push({ p1: { x: 20, y: -20 }, p2: { x: 50, y: -20 } });
 
     // Test example, handle two horiz line poly:
-    horizontal_edges.push([[100, -20], [120, -20]]);
-    horizontal_edges.push([[120, -20], [140, -20]]);
+    horizontal_edges.push({ p1: { x: 100, y: -20 }, p2: { x: 120, y: -20 } });
+    horizontal_edges.push({ p1: { x: 120, y: -20 }, p2: { x: 140, y: -20 } });
 
     // find all intersections, build graph
 
     const edges = intersect_and_cut(horizontal_edges, vertical_edges);
-    const [vertices, edge_indices] = remove_doubles(edges);
+    const { vertices, edge_indices } = remove_doubles(edges);
 
     const contours = detect_contours(vertices, edge_indices, spawn_pos);
     const inflated_contours = inflate_contours(contours);
-    const [v2, e2] = contours_into_vert_edge_list(inflated_contours);
+    const { vertices: v2, edge_indices: e2 } = contours_into_vert_edge_list(inflated_contours);
 
     const fs = require("fs");
     const { to_waveform_obj } = require("./waveform_obj_import_export");

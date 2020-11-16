@@ -4,32 +4,44 @@ const { intersect_and_cut, xylines_to_edges } = require("./map_to_polygons");
 
 // for now, ignore winding order
 
-
+/**
+ * Merge all vertices that have a distance of 0. In the resulting vertices and edge list, one edge may share a vertex
+ * with another edge.
+ *
+ * @param {Edge[]} edge_array
+ * @returns {{vertices: Point[], edge_indices: [number, number][]}}
+ */
 function remove_doubles(edge_array) {
-    // edges is a list of horizontal and vertical edges, each edge is a list of two vertices,
-    // and each vertex is a list of an x-value and y-value.
+    // edges is a list of horizontal and vertical edges
     // The vertices inside each edge is ordered s.t. the first vertex has a smaller x- or y-value than the second.
 
-    // convert to vertex array and edge indices array
     const vertices = [];
     const edge_indices = [];
-    for (const [v0, v1] of edge_array) {
-        vertices.push(v0);
-        let len = vertices.push(v1);
+
+    for (const { p1, p2 } of edge_array) {
+        vertices.push(p1);
+        let len = vertices.push(p2);
         edge_indices.push([len - 2, len - 1]);
     }
     console.log("Removing doubles...")
     console.log(`Before: ${vertices.length} vertices and ${edge_indices.length} edges`);
 
     // for each vertex, find all other vertices at same location, and merge vertices
-    const vertices_match = (v0, v1) => v0[0] === v1[0] && v0[1] === v1[1];
+    /**
+     * @param {Point} p1
+     * @param {Point} p2
+     * @returns {boolean}
+     */
+    const vertices_match = (p1, p2) => p1.x === p2.x && p1.y === p2.y;
     const original_vertex_length = vertices.length;
     for (let i = vertices.length - 1; i >= 0; i--) {
+        /** @type {Point|undefined} */
         const v = vertices[i];
         if (v == null) continue;
         delete vertices[i];
-        const matches = []; // indices only
+        /** @type {number[]} */ const matches = []; // indices only
         for (let j = original_vertex_length - 1; j >= 0; j--) {
+            /** @type {Point|undefined} */
             const v1 = vertices[j];
             if (v1 == null) continue;
             if (vertices_match(v, v1)) {
@@ -62,7 +74,7 @@ function remove_doubles(edge_array) {
 
     console.log(`After: ${vertices.length} vertices and ${edge_indices.length} edges`);
 
-    return [vertices, edge_indices];
+    return { vertices, edge_indices };
 }
 
 
@@ -75,27 +87,27 @@ function test_fn() {
 
     // Test examples that demonstrates all different kinds of intersections
     // axis-aligned:
-    horizontal_edges.push([[0, 0], [10, 0]], [[0, 0], [15, 0]]);
-    vertical_edges.push([[0, -20], [0, -10]], [[0, -40], [0, -10]])
+    horizontal_edges.push({ p1: { x: 0, y: 0 }, p2: { x: 10, y: 0 } }, { p1: { x: 0, y: 0 }, p2: { x: 15, y: 0 } });
+    vertical_edges.push({ p1: { x: 0, y: -20 }, p2: { x: 0, y: -10 } }, { p1: { x: 0, y: -40 }, p2: { x: 0, y: -10 } });
 
     // V-E:
-    horizontal_edges.push([[0, -80], [10, -80]]);
-    vertical_edges.push([[0, -90], [0, -70]])
+    horizontal_edges.push({ p1: { x: 0, y: -80 }, p2: { x: 10, y: -80 } });
+    vertical_edges.push({ p1: { x: 0, y: -90 }, p2: { x: 0, y: -70 } });
 
     // E-E crossing:
-    horizontal_edges.push([[-10, -120], [10, -120]]);
-    vertical_edges.push([[0, -130], [0, -110]])
+    horizontal_edges.push({ p1: { x: -10, y: -120 }, p2: { x: 10, y: -120 } });
+    vertical_edges.push({ p1: { x: 0, y: -130 }, p2: { x: 0, y: -110 } });
 
     // remove doubles:
     // cube (check for self-matching):
-    horizontal_edges.push([[0, -190], [10, -190]]);
-    horizontal_edges.push([[0, -200], [10, -200]]);
-    vertical_edges.push([[0, -200], [0, -190]])
-    vertical_edges.push([[10, -200], [10, -190]])
+    horizontal_edges.push({ p1: { x: 0, y: -190 }, p2: { x: 10, y: -190 } });
+    horizontal_edges.push({ p1: { x: 0, y: -200 }, p2: { x: 10, y: -200 } });
+    vertical_edges.push({ p1: { x: 0, y: -200 }, p2: { x: 0, y: -190 } });
+    vertical_edges.push({ p1: { x: 10, y: -200 }, p2: { x: 10, y: -190 } });
 
     const edges = intersect_and_cut(horizontal_edges, vertical_edges);
-    const [vertices, edge_indices] = remove_doubles(edges);
-    //
+    const { vertices, edge_indices } = remove_doubles(edges);
+
     const fs = require("fs");
     const { to_waveform_obj } = require("./waveform_obj_import_export");
 

@@ -1,16 +1,22 @@
 const fs = require("fs");
 const { to_waveform_obj } = require("./waveform_obj_import_export");
-const { intersect_and_cut, xylines_to_edges } = require("./map_to_polygons");
+const { intersect_and_cut, xylines_to_edges, edges_to_edge_vert_list } = require("./map_to_polygons");
 const { remove_doubles } = require("./remove_doubles");
-const { detect_contours, contours_into_vert_edge_list, contours_into_horiz_vert_edge_list } = require("./detect_contours");
+const { detect_contours, contours_remove_unused_verts, contours_into_vert_edge_list, contours_into_horiz_vert_edge_list } = require("./detect_contours");
 const { inflate_contours } = require("./inflate_contour");
 const { Performance } = require("./performance");
 
+/**
+ *
+ * @param {string} map_name
+ * @param {MapData} map_data
+ * @param {[number, number][]} map_spawns
+ */
 function perform_inflation_and_contouring(map_name, map_data, map_spawns) {
 
     const perf = new Performance();
     perf.start();
-    const spawn_pos = [map_spawns[0][0], map_spawns[0][1]];
+    const spawn_pos = { x: map_spawns[0][0], y: map_spawns[0][1] };
     const [horizontal_edges, vertical_edges] = xylines_to_edges(map_data);
     perf.stopAndPrint("Converting edges");
     console.log(`${horizontal_edges.length} horizontal edges and ${vertical_edges.length} vertical edges`);
@@ -19,13 +25,15 @@ function perform_inflation_and_contouring(map_name, map_data, map_spawns) {
 
     perf.start();
     const edges = intersect_and_cut(horizontal_edges, vertical_edges);
+
     perf.stopAndPrint("Intersect and cut");
     perf.start();
-    const [vertices, edge_indices] = remove_doubles(edges);
+    const { vertices, edge_indices } = remove_doubles(edges);
     perf.stopAndPrint("Remove doubles");
 
     perf.start();
-    const contours = detect_contours(vertices, edge_indices, spawn_pos);
+    // TODO: check triangulation code if stripping unused verts is not done
+    const contours = contours_remove_unused_verts(detect_contours(vertices, edge_indices, spawn_pos));
     perf.stopAndPrint("Contour 1");
 
     perf.start();
@@ -41,7 +49,7 @@ function perform_inflation_and_contouring(map_name, map_data, map_spawns) {
     perf.stopAndPrint("Intersect and cut inflated edges");
 
     perf.start();
-    const [vertices2, edge_indices2] = remove_doubles(inflated_edges);
+    const {vertices: vertices2, edge_indices: edge_indices2} = remove_doubles(inflated_edges);
     perf.stopAndPrint("Removing doubles 2");
 
     perf.start();
@@ -49,7 +57,7 @@ function perform_inflation_and_contouring(map_name, map_data, map_spawns) {
     perf.stopAndPrint("Detecting inflated contours");
 
     perf.start();
-    const [v2, e2] = contours_into_vert_edge_list(sanitized_inflated_contours);
+    const {vertices: v2, edge_indices: e2} = contours_into_vert_edge_list(sanitized_inflated_contours);
     perf.stopAndPrint("Converting contours into vertices edge list");
 
     const as_waveform = to_waveform_obj(v2, e2, "AdventureLandMapData");

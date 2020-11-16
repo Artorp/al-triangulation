@@ -1,6 +1,13 @@
+/**
+ *
+ * @param {Point[]} vertices
+ * @param {[number, number][]} edge_indices
+ * @param {string} object_name
+ * @returns {string}
+ */
 function to_waveform_obj(vertices, edge_indices, object_name) {
     let waveform_data = `o ${object_name}\n`;
-    for (const [x, y] of vertices) {
+    for (const { x, y } of vertices) {
         waveform_data += `v ${x} ${y} 0\n`;
     }
     for (const [v0, v1] of edge_indices) {
