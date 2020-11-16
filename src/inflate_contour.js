@@ -9,7 +9,7 @@ function inflate_contours(contours) {
     console.log("Inflating...");
     const inflated_contours = [];
     for (const contour of contours) {
-        console.log(`Input length: ${contour.length} vertices.`);
+        // console.log(`Input length: ${contour.length} vertices.`);
         const generated_contour = [];
         for (let i = 0; i < contour.length; i++) {
             const v0_idx = i;
@@ -36,7 +36,7 @@ function inflate_contours(contours) {
             }
         }
 
-        console.log(`Output length: ${generated_contour.length} vertices. Removed ${remove_count} vertices after inflating.`);
+        // console.log(`Output length: ${generated_contour.length} vertices. Removed ${remove_count} vertices after inflating.`);
         // v0, v1, v2 -> new vertices
         // v13, v0, v1 -> final vertices
         inflated_contours.push(generated_contour);
