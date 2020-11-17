@@ -69,31 +69,6 @@ function intersect_and_cut(horizontal_edges, vertical_edges) {
     // use a sweeping function to search for all edges with the same x- or y-value
 
     /**
-     * Helper generator function, group edges such that all edges that are collinear with the sweep axis are
-     * returned. The edges must be either all vertical or all horizontal, and be sorted asc by their orthogonal axis
-     * (x-axis for vertical, y-axis for horizontal)
-     *
-     * @param {Edge[]} edges
-     * @param {"x"|"y"} sweep_axis
-     * @returns {Generator<[number, number], void, *>}
-     */
-    function* group_by_one_axis(edges, sweep_axis) {
-        /** @type {number} */
-        let last_value = edges[0].p1[sweep_axis];
-        let last_idx = 0;
-        for (let i = 1; i < edges.length; i++) {
-            const point = edges[i].p1;
-            if (last_value !== point[sweep_axis]) {
-                yield [last_idx, i];
-                last_idx = i;
-                last_value = point[sweep_axis];
-            }
-        }
-        yield [last_idx, edges.length];
-        return 5;
-    }
-
-    /**
      * Cut all edges that are parallel with each other. If they overlap, cut such that no edges overlap and vertices
      * are preserved (removing vertices that are on top of each other, doubles)
      *
@@ -253,6 +228,30 @@ function intersect_and_cut(horizontal_edges, vertical_edges) {
 }
 
 /**
+ * Helper generator function, group edges such that all edges that are collinear with the sweep axis are
+ * returned. The edges must be either all vertical or all horizontal, and be sorted asc by their orthogonal axis
+ * (x-axis for vertical, y-axis for horizontal)
+ *
+ * @param {Edge[]} edges
+ * @param {"x"|"y"} sweep_axis
+ * @returns {Generator<[number, number], void, *>}
+ */
+function* group_by_one_axis(edges, sweep_axis) {
+    /** @type {number} */
+    let last_value = edges[0].p1[sweep_axis];
+    let last_idx = 0;
+    for (let i = 1; i < edges.length; i++) {
+        const point = edges[i].p1;
+        if (last_value !== point[sweep_axis]) {
+            yield [last_idx, i];
+            last_idx = i;
+            last_value = point[sweep_axis];
+        }
+    }
+    yield [last_idx, edges.length];
+}
+
+/**
  *
  * @param {Edge[]} edges
  * @returns {{vertices: Point[], edge_indices: [number, number][]}}
@@ -301,4 +300,4 @@ function test_fn() {
 }
 
 
-module.exports = { intersect_and_cut, xylines_to_edges, edges_to_edge_vert_list };
+module.exports = { intersect_and_cut, xylines_to_edges, edges_to_edge_vert_list, group_by_one_axis };

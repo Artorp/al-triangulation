@@ -30,17 +30,7 @@ const { intersect_lines, line_point_pair_to_offset, subtract_points_2d, distance
 function detect_contours(vertices, edge_indices, spawn_position){
 
     // build vertex->edge index that for each vertex, lists all edges (by index) connected to this vertex
-    /** @type {number[][]} */
-    const vertices_with_connected_edges = [];
-    for (let i = 0; i < vertices.length; i++) {
-        vertices_with_connected_edges.push([]);
-    }
-    for (let i = 0; i < edge_indices.length; i++) {
-        const edge = edge_indices[i];
-        const [v0, v1] = edge;
-        vertices_with_connected_edges[v0].push(i);
-        vertices_with_connected_edges[v1].push(i);
-    }
+    const vertices_with_connected_edges = build_adjacent_edges_list(vertices, edge_indices);
     console.log("Using spawn position ", spawn_position);
 
     /** @type {Point[][]} */
@@ -256,6 +246,34 @@ function detect_contours(vertices, edge_indices, spawn_position){
 }
 
 /**
+ * Build a list of equal length to vertices, of all edges that are connected to a vertex.
+ *
+ * @example
+ * const vertex_to_connected_edges = build_adjacent_edges_list(vertices, edge_indices);
+ * console.log("Vertex at pos 0 is connected to",
+ *     vertex_to_connected_edges[0].length, "edges");
+ * console.log("One of them are:", edge_indices[vertex_to_connected_edges[0]]);
+ *
+ * @param {Point[]} vertices
+ * @param {[number, number][]} edge_indices
+ * @returns {number[][]}
+ */
+function build_adjacent_edges_list(vertices, edge_indices) {
+    /** @type {number[][]} */
+    const vertices_with_connected_edges = [];
+    for (let i = 0; i < vertices.length; i++) {
+        vertices_with_connected_edges.push([]);
+    }
+    for (let i = 0; i < edge_indices.length; i++) {
+        const edge = edge_indices[i];
+        const [p1_idx, p2_idx] = edge;
+        vertices_with_connected_edges[p1_idx].push(i);
+        vertices_with_connected_edges[p2_idx].push(i);
+    }
+    return vertices_with_connected_edges;
+}
+
+/**
  * Remove all vertices of a contour if that vertex is not part of an angle / bend
  *
  * @param {Point[][]} contours
@@ -371,4 +389,4 @@ function test_fn() {
     fs.writeFileSync("output_data.obj", as_waveform, { encoding: "utf8" })
 }
 
-module.exports = { detect_contours, contours_remove_unused_verts, contours_into_vert_edge_list, contours_into_horiz_vert_edge_list };
+module.exports = { detect_contours, contours_remove_unused_verts, contours_into_vert_edge_list, contours_into_horiz_vert_edge_list, build_adjacent_edges_list };

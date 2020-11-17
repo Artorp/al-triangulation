@@ -18,61 +18,31 @@ function remove_doubles(edge_array) {
     const vertices = [];
     const edge_indices = [];
 
-    for (const { p1, p2 } of edge_array) {
-        vertices.push(p1);
-        let len = vertices.push(p2);
-        edge_indices.push([len - 2, len - 1]);
-    }
-    console.log("Removing doubles...")
-    console.log(`Before: ${vertices.length} vertices and ${edge_indices.length} edges`);
+    const vertex_pos_to_vertex_index_x_y = {};
 
-    // for each vertex, find all other vertices at same location, and merge vertices
     /**
-     * @param {Point} p1
-     * @param {Point} p2
-     * @returns {boolean}
+     * @param {Point} p
+     * @returns {number}
      */
-    const vertices_match = (p1, p2) => p1.x === p2.x && p1.y === p2.y;
-    const original_vertex_length = vertices.length;
-    for (let i = vertices.length - 1; i >= 0; i--) {
-        /** @type {Point|undefined} */
-        const v = vertices[i];
-        if (v == null) continue;
-        delete vertices[i];
-        /** @type {number[]} */ const matches = []; // indices only
-        for (let j = original_vertex_length - 1; j >= 0; j--) {
-            /** @type {Point|undefined} */
-            const v1 = vertices[j];
-            if (v1 == null) continue;
-            if (vertices_match(v, v1)) {
-                matches.push(j)
-                delete vertices[j];
-            }
+    const store_vertex_return_vertex_index = (p) => {
+        if (vertex_pos_to_vertex_index_x_y[p.x] == null) {
+            vertex_pos_to_vertex_index_x_y[p.x] = {};
         }
-        const same_vertices = [i, ...matches];
-        // merge all matches
-        const next_idx = vertices.push(v) - 1;
-        for (let j = 0; j < edge_indices.length; j++) {
-            let [idx_a, idx_b] = edge_indices[j];
-            // assume no zero-length edges
-            if (same_vertices.indexOf(idx_a) !== -1) {
-                edge_indices[j] = [next_idx, idx_b];
-            } else if (same_vertices.indexOf(idx_b) !== -1) {
-                edge_indices[j] = [idx_a, next_idx];
-            }
+        if (vertex_pos_to_vertex_index_x_y[p.x][p.y] == null) {
+            const vertex_index = vertices.push(p) - 1;
+            vertex_pos_to_vertex_index_x_y[p.x][p.y] = vertex_index;
+            return vertex_index;
         }
+        return vertex_pos_to_vertex_index_x_y[p.x][p.y];
     }
 
-    // remove all original vertex entries (which should now all be deleted) and offset indices by the correct amount
-    vertices.splice(0, original_vertex_length);
-    for (let i = 0; i < edge_indices.length; i++) {
-        edge_indices[i][0] -= original_vertex_length;
-        edge_indices[i][1] -= original_vertex_length;
-        edge_indices[i].reverse();
+    for (const { p1, p2 } of edge_array) {
+        const p1_idx = store_vertex_return_vertex_index(p1);
+        const p2_idx = store_vertex_return_vertex_index(p2);
+        edge_indices.push([p1_idx, p2_idx]);
     }
-    edge_indices.reverse();
 
-    console.log(`After: ${vertices.length} vertices and ${edge_indices.length} edges`);
+    console.log(`From ${edge_indices.length * 2} vertices to ${vertices.length} vertices.`);
 
     return { vertices, edge_indices };
 }

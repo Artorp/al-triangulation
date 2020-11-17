@@ -127,6 +127,26 @@ function rot90(v) {
 }
 
 /**
+ * Rotate 2d vector v 180 degrees ccw
+ *
+ * @param {Point} v
+ * @returns {Point}
+ */
+function rot180(v) {
+    return { x: -v.x, y: -v.y };
+}
+
+/**
+ * Rotate 2d vector v 270 degrees ccw
+ *
+ * @param {Point} v
+ * @returns {Point}
+ */
+function rot270(v) {
+    return { x: -v.y, y: v.x };
+}
+
+/**
  * Returns v1 + v2
  *
  * @param {Point} v1
@@ -168,6 +188,16 @@ function multiply_scalar_2d(v1, scalar){
  */
 function distance_2d(v1, v2) {
     return Math.sqrt(Math.pow(v1.x - v2.x, 2) + Math.pow(v1.y - v2.y, 2));
+}
+
+/**
+ * Round point coordinates to integer values
+ *
+ * @param {Point} p
+ * @returns {Point}
+ */
+function to_integer(p) {
+    return { x: Math.round(p.x), y: Math.round(p.y) };
 }
 
 /**
@@ -241,6 +271,6 @@ function test_fn() {
 }
 
 module.exports = {
-    intersect_lines, line_point_pair_to_offset, add_points_2d, subtract_points_2d, multiply_scalar_2d, distance_2d, normalize, cross_product_2d, dot_product_2d, angle_between, vertices_equal, midpoint, rot90, points_are_collinear
+    intersect_lines, line_point_pair_to_offset, add_points_2d, subtract_points_2d, multiply_scalar_2d, distance_2d, normalize, cross_product_2d, dot_product_2d, angle_between, vertices_equal, midpoint, rot90, rot180, rot270, points_are_collinear, to_integer
 };
 
