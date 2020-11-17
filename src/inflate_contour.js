@@ -1,6 +1,6 @@
 const { intersect_and_cut, xylines_to_edges } = require("./map_to_polygons");
 const { remove_doubles } = require("./remove_doubles");
-const { intersect_lines, line_point_pair_to_offset, subtract_points_2d, distance_2d, cross_product_2d, normalize, dot_product_2d, angle_between, vertices_equal, midpoint, multiply_scalar_2d, rot90, add_points_2d } = require("./geometry");
+const { line_point_pair_to_offset, subtract_points_2d, distance_2d, cross_product_2d, normalize, dot_product_2d, angle_between, vertices_equal, midpoint, multiply_scalar_2d, rot90, add_points_2d } = require("./geometry");
 const { detect_contours, contours_into_vert_edge_list } = require("./detect_contours");
 
 /**

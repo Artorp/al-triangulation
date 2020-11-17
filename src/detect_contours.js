@@ -41,8 +41,7 @@ function detect_contours(vertices, edge_indices, spawn_position){
         vertices_with_connected_edges[v0].push(i);
         vertices_with_connected_edges[v1].push(i);
     }
-    const nudged_spawn_position = {x: spawn_position.x + 0.5, y: spawn_position.y + 0.5};
-    console.log("Using spawn position ", nudged_spawn_position);
+    console.log("Using spawn position ", spawn_position);
 
     /** @type {Point[][]} */
     const found_contours = [];
@@ -63,7 +62,7 @@ function detect_contours(vertices, edge_indices, spawn_position){
             const edge_idx = searchable_edges[i];
             const edge = edge_indices[edge_idx];
             const [a, b] = [vertices[edge[0]], vertices[edge[1]]];
-            if (points_are_collinear(nudged_spawn_position, a, b)) {
+            if (points_are_collinear(spawn_position, a, b)) {
                 continue;
             }
             raycast_target_edge_idx = i;
@@ -77,7 +76,7 @@ function detect_contours(vertices, edge_indices, spawn_position){
         // use the middle point of the found edge as the raycast target angle
         const raycast_target_edge = edge_indices[searchable_edges[raycast_target_edge_idx]];
         const raycast_target_point = midpoint(vertices[raycast_target_edge[0]], vertices[raycast_target_edge[1]]);
-        let raycast_ray = subtract_points_2d(raycast_target_point, nudged_spawn_position);
+        let raycast_ray = subtract_points_2d(raycast_target_point, spawn_position);
         raycast_ray = normalize(raycast_ray);
         // increase raycast distance to +infinity, or in this case just a large number
         // could also just increase by a little bit
@@ -96,9 +95,9 @@ function detect_contours(vertices, edge_indices, spawn_position){
             const e_idx = searchable_edges[i];
             const [v1_idx, v2_idx] = edge_indices[e_idx];
             const [ep, er] = line_point_pair_to_offset(vertices[v1_idx], vertices[v2_idx]);
-            const intersection_point = intersect_lines(nudged_spawn_position, raycast_ray, ep, er);
+            const intersection_point = intersect_lines(spawn_position, raycast_ray, ep, er);
             if (intersection_point != null) {
-                const dist = distance_2d(nudged_spawn_position, intersection_point);
+                const dist = distance_2d(spawn_position, intersection_point);
                 intersections.push({e_idx, intersection_point, dist, is_contour: false});
             }
         }
@@ -115,9 +114,9 @@ function detect_contours(vertices, edge_indices, spawn_position){
             for (const edge of edges) {
                 const [v1, v2] = edge;
                 const [ep, er] = line_point_pair_to_offset(v1, v2);
-                const intersection_point = intersect_lines(nudged_spawn_position, raycast_ray, ep, er);
+                const intersection_point = intersect_lines(spawn_position, raycast_ray, ep, er);
                 if (intersection_point) {
-                    const dist = distance_2d(nudged_spawn_position, intersection_point);
+                    const dist = distance_2d(spawn_position, intersection_point);
                     intersections.push({e_idx: -1, intersection_point, dist, is_contour: true});
                 }
             }

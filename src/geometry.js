@@ -46,7 +46,10 @@ function intersect_lines(p, r, q, s){
     const u = u_numerator / rs_cross;
     const t = t_numerator / rs_cross;
 
-    if (0 <= u && u <= 1 && 0 <= t && t <= 1) {
+    const eps = 1e-12 // underflow around 1e-15
+    const in_range_inclusive = (float_val, lower, upper) => (lower - float_val <= eps && float_val - upper <= eps);
+
+    if (in_range_inclusive(u, 0, 1) && in_range_inclusive(t, 0, 1)) {
         // line segments are intersecting at p + t*r = q + u * s
         return add_points_2d(p, multiply_scalar_2d(r, t));
     }
@@ -228,6 +231,13 @@ function test_fn() {
     // line from (5, 0) -> (15, 0) and (0, 5), (0, 15) do not intersect
     console.log("Expect null");
     console.log(intersect_lines({ x: 5, y: 0 }, { x: 10, y: 0 }, { x: 0, y: 5 }, { x: 0, y: 10 }));
+
+    // exclusive check, line from (0, 0) -> (1472, 64) and (1104, 40)->(1104, 48), and (1104, 48)->(1112, 48) do not intersect
+    console.log("Expect (1104, 48) on both");
+    let ray = { x: 1472, y: 64 };
+    ray = multiply_scalar_2d(normalize(ray), 10000);
+    console.log(intersect_lines({ x: 0, y: 0 }, { x: 1472, y: 64 }, { x: 1104, y: 40 }, { x: 0, y: 8 }));
+    console.log(intersect_lines({ x: 0, y: 0 }, { x: 1472, y: 64 }, { x: 1104, y: 48 }, { x: 8, y: 0 }));
 }
 
 module.exports = {
