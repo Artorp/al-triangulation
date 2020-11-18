@@ -25,5 +25,6 @@ module.exports = {
         libraryTarget: "umd",
         umdNamedDefine: true
     },
-    target: "node"
+    target: "node",
+    devtool: "inline-source-map"
 };
