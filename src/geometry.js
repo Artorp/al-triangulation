@@ -1,9 +1,4 @@
 /**
- * @typedef {{x: !number, y: !number}} Point
- * @typedef {{p1: !Point, p2: !Point}} Edge
- */
-
-/**
  *
  * @param {Point} p1
  * @param {Point} p2
@@ -47,7 +42,14 @@ function intersect_lines(p, r, q, s){
     const t = t_numerator / rs_cross;
 
     const eps = 1e-12 // underflow around 1e-15
-    const in_range_inclusive = (float_val, lower, upper) => (lower - float_val <= eps && float_val - upper <= eps);
+
+    /**
+     * @param {number} float_val
+     * @param {number} lower
+     * @param {number} upper
+     */
+    const in_range_inclusive = (float_val, lower, upper) =>
+        (lower - float_val <= eps && float_val - upper <= eps);
 
     if (in_range_inclusive(u, 0, 1) && in_range_inclusive(t, 0, 1)) {
         // line segments are intersecting at p + t*r = q + u * s

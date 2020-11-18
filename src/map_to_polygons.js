@@ -1,3 +1,5 @@
+const { map_data } = require("./import_map_data");
+
 /**
  * Takes in Adventure Land map data, and unpacks the horizontal and vertical edges to
  * edges represented by two points.
@@ -88,7 +90,7 @@ function intersect_and_cut(horizontal_edges, vertical_edges) {
             const checked = [];
             while (unchecked.length > 1) {
                 let found_intersection = false;
-                const e0 = unchecked.pop();
+                const e0 = /** @type {Edge} */ (unchecked.pop());
                 // rely on the invariant property that all edges' vertices are internally ordered to be sorted by the
                 // axis that varies
                 const e0_min = e0.p1[axis2];
@@ -145,7 +147,7 @@ function intersect_and_cut(horizontal_edges, vertical_edges) {
     const processed_v_edges = [];
 
     while (working_edge_list_h.length > 0) {
-        const edge_h = working_edge_list_h.pop();
+        const edge_h = /** @type {Edge} */ (working_edge_list_h.pop());
         const edge_h_y = edge_h.p1.y;
         // intersection check vs all vertical edges
         let found_intersection = false;
@@ -259,6 +261,7 @@ function* group_by_one_axis(edges, sweep_axis) {
 function edges_to_edge_vert_list(edges) {
     /** @type {Point[]} */
     const vertices = [];
+    /** @type {[number, number][]} */
     const edge_indices = [];
     for (const { p1, p2 } of edges) {
         vertices.push(p1, p2);
@@ -270,7 +273,7 @@ function edges_to_edge_vert_list(edges) {
 
 
 function test_fn() {
-    const { data, spawns } = require("./map_data/winter_inn.json");
+    const { data, spawns } = map_data("winter_inn");
     const [horizontal_edges, vertical_edges] = xylines_to_edges(data);
     console.log(`${horizontal_edges.length} horizontal edges and ${vertical_edges.length} vertical edges`);
 

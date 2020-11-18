@@ -20,6 +20,9 @@ class Performance {
         this.t1 = Date.now();
     }
 
+    /**
+     * @param {string} job_name
+     */
     stopAndPrint(job_name) {
         this.t1 = Date.now();
         console.log(`${job_name} took ${this.durationPretty()}.`);

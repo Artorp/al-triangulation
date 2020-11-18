@@ -174,7 +174,8 @@ function contours_raycast_edges(contours) {
 
             contour_with_collisions.push(p0);
             for (const v of collision_major_values) {
-                let p = {};
+                /** @type Point */
+                let p = { x: -1, y: -1 };
                 p[contour_same_val_axis] = contour_major_value;
                 p[sweep_axis] = v;
                 contour_with_collisions.push(p);
@@ -223,7 +224,9 @@ function* generate_rays_inward(p0, p1, p2) {
             inverse_transformation = rot180;
         } else {
             // v1 points up
+            /** @param {Point} p1 */
             point_up_transformation = p1 => p1;
+            /** @param {Point} p1 */
             inverse_transformation = p1 => p1;
         }
     } else {
@@ -374,6 +377,7 @@ function fill_quads_and_remove_doubles(cut_contours, internal_edges_cut) {
     /** @type {Edge[]} */
     const edges = [];
 
+    /** @type Object<number, Object<number, boolean>> */
     const contour_holes_x_y = {};
     /**@param {Point} p
      */

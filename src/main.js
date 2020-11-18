@@ -1,4 +1,5 @@
 const fs = require("fs");
+const { map_data } = require("./import_map_data");
 const { to_waveform_obj, to_waveform_obj_w_faces } = require("./waveform_obj_import_export");
 const { intersect_and_cut, xylines_to_edges, edges_to_edge_vert_list } = require("./map_to_polygons");
 const { remove_doubles } = require("./remove_doubles");
@@ -66,6 +67,7 @@ function perform_inflation_and_contouring(map_name, map_data, map_spawns) {
     fs.writeFileSync(`../output_waveform_objs/${map_name}.obj`, as_waveform, { encoding: "utf8" });
 }
 
-const { data, spawns } = require("./map_data/winter_inn.json");
+const process_map = "winter_inn";
+const { data, spawns } = map_data(process_map);
 
-perform_inflation_and_contouring("winter_inn", data, spawns);
+perform_inflation_and_contouring(process_map, data, spawns);

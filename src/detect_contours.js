@@ -1,3 +1,4 @@
+const { map_data } = require("./import_map_data");
 const { intersect_and_cut, xylines_to_edges } = require("./map_to_polygons")
 const { remove_doubles } = require("./remove_doubles")
 const { intersect_lines, line_point_pair_to_offset, subtract_points_2d, distance_2d, cross_product_2d, normalize, dot_product_2d, angle_between, vertices_equal, midpoint, multiply_scalar_2d, points_are_collinear } = require("./geometry");
@@ -115,11 +116,16 @@ function detect_contours(vertices, edge_indices, spawn_position){
             break;
         }
 
+        if (closest_intersection == null) {
+            throw new Error("Found no intersection when raycasting.")
+        }
+
         // use simple depth-first search to remove all edges from current polygon from the list of searchable edges
         const open_edge_set = [closest_intersection.e_idx];
+        /** @type {Object<number, boolean|undefined>} */
         const seen_edge_indices = {};
         while (open_edge_set.length > 0) {
-            const edge_idx = open_edge_set.pop(); // edge is an index of edge_indices
+            const edge_idx = /** @type {number} */ (open_edge_set.pop()); // edge is an index of edge_indices
             seen_edge_indices[edge_idx] = true;
             // add edge index to list of edges to remove
             // find all connected edges
@@ -188,27 +194,29 @@ function detect_contours(vertices, edge_indices, spawn_position){
                     edges_ordered.push([edge[1], edge[0]]);
                 }
             }
-            // remove the current edge (if there are more than 1 edges)
-            let angle_compare_edge;
+            // remove the current edge
+            /** @type [number, number] */
+            let angle_compare_edge_indices = [-1, -1];  // TODO: assign in a way where the type system knows
             for (let i = 0; i < edges_ordered.length; i++) {
                 if (edges_ordered[i][1] === vertex1_idx) {
-                    [angle_compare_edge] = edges_ordered.splice(i, 1);
+                    [angle_compare_edge_indices] = edges_ordered.splice(i, 1);
                     break;
                 }
             }
+
             if (edges_ordered.length === 0) {
                 // this was a single edge, add the returning edge as an alternative
-                edges_ordered.push([angle_compare_edge[0], angle_compare_edge[1]]);
+                edges_ordered.push([angle_compare_edge_indices[0], angle_compare_edge_indices[1]]);
             }
-            angle_compare_edge = [vertices[angle_compare_edge[0]], vertices[angle_compare_edge[1]]]
-            angle_compare_edge = subtract_points_2d(angle_compare_edge[0], angle_compare_edge[1]);
+            let angle_compare_edge = [vertices[angle_compare_edge_indices[0]], vertices[angle_compare_edge_indices[1]]];
+            const angle_compare_vector = subtract_points_2d(angle_compare_edge[0], angle_compare_edge[1]);
             // check all other edges, select the one that points the most to the left
             const edge_angles = [];
             for (let i = 0; i < edges_ordered.length; i++) {
                 const check_edge_v_indices = edges_ordered[i];
                 let check_edge = [vertices[check_edge_v_indices[0]], vertices[check_edge_v_indices[1]]];
                 let check_edge_v = subtract_points_2d(check_edge[0], check_edge[1]);
-                let angle = angle_between(angle_compare_edge, check_edge_v);
+                let angle = angle_between(angle_compare_vector, check_edge_v);
                 angle = (angle + 2 * Math.PI) % (2 * Math.PI);
                 check_edge_v = normalize(check_edge_v);
                 edge_angles.push([i, angle]);
@@ -293,6 +301,7 @@ function contours_remove_unused_verts(contours) {
  */
 function contours_into_vert_edge_list(contours) {
     const vertices = [];
+    /** @type [number, number][] */
     const edge_indices = [];
     for (const contour of contours) {
         if (contour.length <= 1) continue;
@@ -350,7 +359,7 @@ function contours_into_horiz_vert_edge_list(contours) {
 
 
 function test_fn() {
-    const { data, spawns } = require("./map_data/winter_inn.json");
+    const { data, spawns } = map_data("winter_inn");
     const spawn_pos = { x: spawns[0][0], y: spawns[0][1] };
     const [horizontal_edges, vertical_edges] = xylines_to_edges(data);
     console.log(`${horizontal_edges.length} horizontal edges and ${vertical_edges.length} vertical edges`);

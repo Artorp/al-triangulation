@@ -1,3 +1,4 @@
+const { map_data } = require("./import_map_data");
 const { intersect_and_cut, xylines_to_edges } = require("./map_to_polygons");
 
 // after cutting at all intersections, remove doubles and build polygon meshes
@@ -15,9 +16,12 @@ function remove_doubles(edge_array) {
     // edges is a list of horizontal and vertical edges
     // The vertices inside each edge is ordered s.t. the first vertex has a smaller x- or y-value than the second.
 
+    /** @type {Point[]} */
     const vertices = [];
+    /** @type {[number, number][]} */
     const edge_indices = [];
 
+    /** @type Object<number, Object<number, number>> */
     const vertex_pos_to_vertex_index_x_y = {};
 
     /**
@@ -49,7 +53,7 @@ function remove_doubles(edge_array) {
 
 
 function test_fn() {
-    const { data, spawns } = require("./map_data/winter_inn.json");
+    const { data, spawns } = map_data("winter_inn");
     const [horizontal_edges, vertical_edges] = xylines_to_edges(data);
     console.log(`${horizontal_edges.length} horizontal edges and ${vertical_edges.length} vertical edges`);
 
