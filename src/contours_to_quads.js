@@ -502,10 +502,13 @@ function fill_quads_and_remove_doubles(cut_contours, internal_edges_cut) {
         const p1_south_idx = find_connected_vertex_south(p1_idx);
         const p2_south_idx = find_connected_vertex_south(p2_idx);
         if (p1_south_idx == null || p2_south_idx == null) continue;
+        const p1_s = vertices[p1_south_idx];
+        const p2_s = vertices[p2_south_idx];
+        if (p1_s.y !== p2_s.y) continue;
 
         // check if the 4 vertices form a hole, if so, don't fill this face
         let all_are_holes = true;
-        for (const v of [p1, p2, vertices[p1_south_idx], vertices[p2_south_idx]]) {
+        for (const v of [p1, p2, p1_s, p2_s]) {
             all_are_holes = all_are_holes && vertex_is_contour_hole(v);
         }
         if (all_are_holes) continue;
