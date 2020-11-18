@@ -193,32 +193,6 @@ function contours_raycast_edges(contours) {
     const internal_edges_cut = intersect_and_cut(new_horizontal_edges, new_vertical_edges);
 
     return { cut_contours, internal_edges_cut };
-    // TODO: temp remove
-    // const vertices = [];
-    // const edge_indices = [];
-    // for (const edge of [...new_horizontal_edges, ...new_vertical_edges]) {
-    //     let idx = vertices.push(edge.p1, edge.p2);
-    //     edge_indices.push([idx - 2, idx - 1]);
-    // }
-    // return {vertices, edge_indices};
-
-
-    // TODO
-    // For each vertex and the previous and next in the contour, check if it is co-linear (send a single line out, directly left), or a right bend (send
-    // two rays out, one left, one forward). Round the results in the intersection function?.
-    // Add all generated lines to horizontal and vertical lists. Sort by their axes. Then go through and delete any duplicate rays.
-    // Return the result.
-    // The resulting edges can be intersect-and-cut to easily generate all edges.
-    // Note: holes contour will be of length 4 or more. If of length 4, must register those four vertices in a blacklist.
-    // const hole_vertex = {(v0, v1, v2, v3): false} or something.
-    //   Can use winding number to check if a contour is inside or outside. For each left turn, +1, for each right turn, -4. number <0 is hole, >0 is wall.
-    // When done, will have contour edges and walkable space edges. Use a sweeping algorithm to fill faces:
-    // Sort all horizontal edges by y-values. For all h-edges grouped by y-value:
-    //   Attempt to find two vertices down (look at all connected vertices). If found, fill with face. Must have an edge between all vertices before filling.
-    //   If not found, means there's a hole or contour has stopped.
-    //   If found, but the four vertices is part of a hole contour, skip. Can check using hole_vertex as generated above. Note: Only holes with exactly 4 edges can be
-    //   found, so only those types  need to be checked.
-    //   Repeat for next grouping
 }
 
 /**

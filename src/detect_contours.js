@@ -4,18 +4,6 @@ const { intersect_lines, line_point_pair_to_offset, subtract_points_2d, distance
 
 // Input: vertex array, and edge index array (edges can share vertices)
 // Goal: Create contour meshes, with proper winding order.
-
-// Define a spawn point.
-// Raycast from spawn point to infinity, the first edge hit is the starting edge.
-// Initial winding order is Counter-Clockwise from ray, so ray.normalized cross z-up.
-// Run a depth first search on the mesh, always selecting the edge that goes to the left.
-// (first create an index of edges from each vertices?)
-// Build contour mesh while doing this.
-// When finding the initial edge / starting vertex, procedure done. Remove mesh that was worked from, then...
-// select another edge (the edge must have an angle to the raycast ray), and choose edge midpoint as ray target
-// then run above algorithm again.
-// When no more edges, should have a set of contour meshes. These can be inflated / deflated as needed.
-
 /**
  * Detects all wall contours that are walkable from the given spawn point. The resulting contour
  * goes counter-clockwise such that an edge in the contour rotated by 90 degrees ccw will point towards
