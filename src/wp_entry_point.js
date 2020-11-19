@@ -1,10 +1,9 @@
 /**
- * Webpack entry point (as defined in webpack.config.entry
+ * Webpack entry point (as defined in webpack.config.entry)
  * */
 
-const { xylines_to_edges } = require("./map_to_polygons");
-
+const { generate_navmesh } = require("./generate_navmesh");
 
 module.exports = {
-    xylines_to_edges
+    generate_navmesh
 }
