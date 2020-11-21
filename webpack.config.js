@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-    entry: './src/wp_entry_point.js',
+    entry: './src/index.js',
     module: {
         rules: [
             {
@@ -21,10 +21,11 @@ module.exports = {
     output: {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist'),
-        library: "myLibrary",
+        library: "ALTriangulation",
         libraryTarget: "umd",
-        umdNamedDefine: true
+        umdNamedDefine: true,
+        globalObject: "this"
     },
-    target: "node",
+    target: "electron8.3-renderer",
     devtool: "inline-source-map"
 };

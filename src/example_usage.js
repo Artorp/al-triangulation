@@ -34,7 +34,6 @@ function perform_inflation_and_contouring(map_name, map_data, map_spawns) {
     perf.stopAndPrint("Remove doubles");
 
     perf.start();
-    // TODO: check triangulation code if stripping unused verts is not done
     const contours = contours_remove_unused_verts(detect_contours(vertices, edge_indices, spawn_pos));
     perf.stopAndPrint("Contour 1");
 
@@ -55,7 +54,7 @@ function perform_inflation_and_contouring(map_name, map_data, map_spawns) {
     perf.stopAndPrint("Removing doubles 2");
 
     perf.start();
-    const inflated_contours = detect_contours(vertices2, edge_indices2, spawn_pos);
+    const inflated_contours = contours_remove_unused_verts(detect_contours(vertices2, edge_indices2, spawn_pos));
     perf.stopAndPrint("Detecting inflated contours");
 
     perf.start();
