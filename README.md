@@ -14,6 +14,14 @@ Clone or download repository to folder of your choice. Navigate to folder and in
 
     npm install
 
+## Bundle (optional)
+
+Webpack is configured to bundle the source code into a single js file, which can be uploaded into an Adventure Land code slot. Run the following command to build a bundle:
+
+    npm run build
+
+A js file `bundle/bundle.js` will be created. This file can be required directly, or uploaded to a code slot and required through AL's `require_code` function.
+
 ## Usage
 
 The package can be imported using CommonJS directly by specifying the absolute or relative path to the `al-triangulation` folder.
