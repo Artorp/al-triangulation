@@ -1,5 +1,13 @@
 const { map_data } = require("./import_map_data");
 
+
+/**
+ * @typedef {import("./geometry_types").Point} Point
+ * @typedef {import("./geometry_types").Edge} Edge
+ * @typedef {import("./al_jsdoc_types").MapData} MapData
+ * */
+
+
 /**
  * Takes in Adventure Land map data, and unpacks the horizontal and vertical edges to
  * edges represented by two points.

@@ -8,6 +8,12 @@ const { inflate_contours } = require("./inflate_contour");
 const { contours_raycast_edges, fill_quads_and_remove_doubles } = require("./contours_to_quads");
 const { Performance } = require("./performance");
 
+
+/**
+ * @typedef {import("./al_jsdoc_types").MapData} MapData
+ * */
+
+
 /**
  *
  * @param {string} map_name

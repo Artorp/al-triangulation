@@ -7,6 +7,11 @@ const { intersect_and_cut, group_by_one_axis } = require("./map_to_polygons");
 const RAY_LENGTH = 10000;
 
 /**
+ * @typedef {import("./geometry_types").Point} Point
+ * @typedef {import("./geometry_types").Edge} Edge
+ * */
+
+/**
  * For each contour vertex, raycast a line to the closest contour edge in all cardinal directions towards walkable
  * space. The resulting edges are confined to walkable space, and ready to be cut and joined into faces.
  *

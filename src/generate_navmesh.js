@@ -9,6 +9,14 @@ const { remove_doubles } = require("./remove_doubles");
 const { intersect_and_cut } = require("./map_to_polygons");
 const { xylines_to_edges } = require("./map_to_polygons");
 
+
+/**
+ * @typedef {import("./al_jsdoc_types").MapData} MapData
+ * @typedef {import("./geometry_types").Point} Point
+ * @typedef {import("./geometry_types").Edge} Edge
+ * */
+
+
 /**
  * Generate navigation mesh based on xlines and ylines from map data. The from_position map position is used as
  * the reference point for which areas separated by walls are defined as walkable or not.

@@ -1,3 +1,8 @@
+
+/**
+ * @typedef {import("./geometry_types").Point} Point
+ * */
+
 /**
  *
  * @param {Point} p1

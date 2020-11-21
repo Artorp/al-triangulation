@@ -3,6 +3,13 @@ const { intersect_and_cut, xylines_to_edges } = require("./map_to_polygons")
 const { remove_doubles } = require("./remove_doubles")
 const { intersect_lines, line_point_pair_to_offset, subtract_points_2d, distance_2d, cross_product_2d, normalize, dot_product_2d, angle_between, vertices_equal, midpoint, multiply_scalar_2d, points_are_collinear } = require("./geometry");
 
+
+/**
+ * @typedef {import("./geometry_types").Point} Point
+ * @typedef {import("./geometry_types").Edge} Edge
+ * */
+
+
 // Input: vertex array, and edge index array (edges can share vertices)
 // Goal: Create contour meshes, with proper winding order.
 /**

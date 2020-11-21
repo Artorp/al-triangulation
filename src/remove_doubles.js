@@ -1,6 +1,13 @@
 const { map_data } = require("./import_map_data");
 const { intersect_and_cut, xylines_to_edges } = require("./map_to_polygons");
 
+
+/**
+ * @typedef {import("./geometry_types").Point} Point
+ * @typedef {import("./geometry_types").Edge} Edge
+ * */
+
+
 // after cutting at all intersections, remove doubles and build polygon meshes
 
 // for now, ignore winding order
