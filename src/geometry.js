@@ -247,7 +247,7 @@ function points_are_collinear(p1, p2, p3) {
 }
 
 
-function test_fn() {
+function _test_fn() {
     // line from (0, 0) -> (0, 10) and (-5, 5),(5, 5) should meet at point (0, 5)
     console.log("Expect (0, 5)");
     console.log(intersect_lines({ x: 0, y: 0 }, { x: 0, y: 10 }, { x: -5, y: 5 }, { x: 10, y: 0 }));

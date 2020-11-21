@@ -52,7 +52,7 @@ function remove_doubles(edge_array) {
 }
 
 
-function test_fn() {
+function _test_fn() {
     const { data, spawns } = map_data("winter_inn");
     const [horizontal_edges, vertical_edges] = xylines_to_edges(data);
     console.log(`${horizontal_edges.length} horizontal edges and ${vertical_edges.length} vertical edges`);

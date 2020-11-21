@@ -141,7 +141,7 @@ function direction_to_char_offset(direction) {
 }
 
 
-function test_fn() {
+function _test_fn() {
     const { data, spawns } = map_data("winter_inn");
     const spawn_pos = { x: spawns[0][0], y: spawns[0][1] };
     const [horizontal_edges, vertical_edges] = xylines_to_edges(data);
