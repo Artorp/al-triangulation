@@ -2,7 +2,7 @@
   "name": "al-triangulation",
   "version": "1.0.0",
   "description": "A few functions for preparing triangulation of Adventure Land (code MMORPG) map data.",
-  "main": "src/index.js",
+  "main": "src/main.js",
   "scripts": {
     "build": "run-s clean bundle",
     "bundle": "webpack",
