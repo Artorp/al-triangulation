@@ -1,5 +1,6 @@
 output_waveform_objs
-
+dist
+bundle
 
 # Created by https://www.toptal.com/developers/gitignore/api/windows,webstorm+all,node
 # Edit at https://www.toptal.com/developers/gitignore?templates=windows,webstorm+all,node
