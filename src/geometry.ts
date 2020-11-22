@@ -1,16 +1,12 @@
+import { Point } from "./geometry_types";
 
 /**
- * @typedef {import("./geometry_types").Point} Point
- * */
-
-/**
+ * Change representation from (p1 -> p2) to (p -> p + r) where r is the point delta
  *
- * @param {Point} p1
- * @param {Point} p2
- * @returns {[Point, Point]}
+ * @param p1
+ * @param p2
  */
-function line_point_pair_to_offset(p1, p2) {
-    // change representation from (p1 -> p2) to (p -> p + r) where r is the point delta
+function line_point_pair_to_offset(p1: Point, p2: Point): [Point, Point] {
 
     const r = subtract_points_2d(p2, p1);
     return [p1, r];
@@ -21,14 +17,8 @@ function line_point_pair_to_offset(p1, p2) {
  * line segment p -> p + r, and q -> q + s
  *
  * If there is no intersection, returns null
- *
- * @param {Point} p
- * @param {Point} r
- * @param {Point} q
- * @param {Point} s
- * @returns {Point|null}
  */
-function intersect_lines(p, r, q, s){
+function intersect_lines(p: Point, r: Point, q: Point, s: Point): Point | null {
     // https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect/565282#565282
 
     const rs_cross = cross_product_2d(r, s);
@@ -48,12 +38,7 @@ function intersect_lines(p, r, q, s){
 
     const eps = 1e-12 // underflow around 1e-15
 
-    /**
-     * @param {number} float_val
-     * @param {number} lower
-     * @param {number} upper
-     */
-    const in_range_inclusive = (float_val, lower, upper) =>
+    const in_range_inclusive = (float_val: number, lower: number, upper: number): boolean =>
         (lower - float_val <= eps && float_val - upper <= eps);
 
     if (in_range_inclusive(u, 0, 1) && in_range_inclusive(t, 0, 1)) {
@@ -69,27 +54,19 @@ function intersect_lines(p, r, q, s){
 /**
  * Takes the '2d cross product' of v1 x v2, defined as the z-value of the 3d cross product, which
  * only depends on the two first two axis x and y.
- *
- * @param {Point} v1
- * @param {Point} v2
- * @returns {number}
  */
-function cross_product_2d(v1, v2) {
-    const {x: x1, y: y1} = v1;
-    const {x: x2, y: y2} = v2;
+function cross_product_2d(v1: Point, v2: Point): number {
+    const { x: x1, y: y1 } = v1;
+    const { x: x2, y: y2 } = v2;
     return x1 * y2 - y1 * x2;
 }
 
 /**
  * Dot product of two 2d vectors.
- *
- * @param {Point} v1
- * @param {Point} v2
- * @returns {number}
  */
-function dot_product_2d(v1, v2) {
-    const {x: x1, y: y1} = v1;
-    const {x: x2, y: y2} = v2;
+function dot_product_2d(v1: Point, v2: Point): number {
+    const { x: x1, y: y1 } = v1;
+    const { x: x2, y: y2 } = v2;
     return x1 * x2 + y1 * y2;
 }
 
@@ -97,14 +74,10 @@ function dot_product_2d(v1, v2) {
  * Finds the angle between two vectors v1 and v2, under the assumption that both vectors share origin point.
  *
  * The angle is expressed in radians.
- *
- * @param {Point} v1
- * @param {Point} v2
- * @returns {number}
  */
-function angle_between(v1, v2) {
-    const {x: x1, y: y1} = v1;
-    const {x: x2, y: y2} = v2;
+function angle_between(v1: Point, v2: Point): number {
+    const { x: x1, y: y1 } = v1;
+    const { x: x2, y: y2 } = v2;
     const a1 = Math.atan2(y1, x1);
     const a2 = Math.atan2(y2, x2);
     return a2 - a1;
@@ -112,132 +85,88 @@ function angle_between(v1, v2) {
 
 /**
  * Returns true if both points are equal. Assumes both points are integers.
- *
- * @param {Point} v1
- * @param {Point} v2
- * @returns {boolean}
  */
-function vertices_equal(v1, v2) {
-    const {x: x1, y: y1} = v1;
-    const {x: x2, y: y2} = v2;
+function vertices_equal(v1: Point, v2: Point): boolean {
+    const { x: x1, y: y1 } = v1;
+    const { x: x2, y: y2 } = v2;
     return x1 === x2 && y1 === y2;
 }
 
 /**
  * Rotate 2d vector v 90 degrees ccw
- *
- * @param {Point} v
- * @returns {Point}
  */
-function rot90(v) {
+function rot90(v: Point): Point {
     return { x: v.y, y: -v.x };
 }
 
 /**
  * Rotate 2d vector v 180 degrees ccw
- *
- * @param {Point} v
- * @returns {Point}
  */
-function rot180(v) {
+function rot180(v: Point): Point {
     return { x: -v.x, y: -v.y };
 }
 
 /**
  * Rotate 2d vector v 270 degrees ccw
- *
- * @param {Point} v
- * @returns {Point}
  */
-function rot270(v) {
+function rot270(v: Point): Point {
     return { x: -v.y, y: v.x };
 }
 
 /**
  * Returns v1 + v2
- *
- * @param {Point} v1
- * @param {Point} v2
- * @returns {Point} v1 + v2
  */
-function add_points_2d(v1, v2){
+function add_points_2d(v1: Point, v2: Point): Point {
     return { x: v1.x + v2.x, y: v1.y + v2.y };
 }
 
 /**
  * Returns v1 - v2
- *
- * @param {Point} v1
- * @param {Point} v2
- * @returns {Point} v1 - v2
  */
-function subtract_points_2d(v1, v2) {
+function subtract_points_2d(v1: Point, v2: Point): Point {
     return { x: v1.x - v2.x, y: v1.y - v2.y };
 }
 
 /**
  * Returns v1 * scalar
- *
- * @param {Point} v1
- * @param {number} scalar
- * @returns {Point} v1 * scalar
  */
-function multiply_scalar_2d(v1, scalar){
-    return {x: v1.x * scalar, y: v1.y * scalar};
+function multiply_scalar_2d(v1: Point, scalar: number): Point {
+    return { x: v1.x * scalar, y: v1.y * scalar };
 }
 
 /**
  * L2 distance between two points
- *
- * @param {Point} v1
- * @param {Point} v2
- * @returns {number}
  */
-function distance_2d(v1, v2) {
+function distance_2d(v1: Point, v2: Point) {
     return Math.sqrt(Math.pow(v1.x - v2.x, 2) + Math.pow(v1.y - v2.y, 2));
 }
 
 /**
  * Round point coordinates to integer values
- *
- * @param {Point} p
- * @returns {Point}
  */
-function to_integer(p) {
+function to_integer(p: Point): Point {
     return { x: Math.round(p.x), y: Math.round(p.y) };
 }
 
 /**
  * Normalize a vector such that its magnitude is 1.0
- *
- * @param {Point} v
- * @returns {Point}
  */
-function normalize(v) {
+function normalize(v: Point): Point {
     const magnitude = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
-    return {x: v.x / magnitude, y: v.y / magnitude};
+    return { x: v.x / magnitude, y: v.y / magnitude };
 }
 
 /**
  * Find the linear midpoint between two points
- *
- * @param {Point} v1
- * @param {Point} v2
- * @returns {Point}
  */
-function midpoint(v1, v2) {
-    return {x: (v1.x + v2.x) / 2, y: (v1.y + v2.y) / 2};
+function midpoint(v1: Point, v2: Point) {
+    return { x: (v1.x + v2.x) / 2, y: (v1.y + v2.y) / 2 };
 }
 
 /**
  * Returns true if the points p1, p2, and p3 are all on the same line
- *
- * @param {Point} p1
- * @param {Point} p2
- * @param {Point} p3
- * @returns {boolean}
  */
-function points_are_collinear(p1, p2, p3) {
+function points_are_collinear(p1: Point, p2: Point, p3: Point): boolean {
     // Assume points are three points on a triangle. In a triangle, the combined distance of the two smaller edges
     // edges is equal to or larger than the larger edge. If they're equal length, the triangle has a height of zero and
     // all points are on the same line / are collinear.
@@ -277,7 +206,23 @@ function _test_fn() {
     console.log(intersect_lines({ x: 0, y: 0 }, { x: 1472, y: 64 }, { x: 1104, y: 48 }, { x: 8, y: 0 }));
 }
 
-module.exports = {
-    intersect_lines, line_point_pair_to_offset, add_points_2d, subtract_points_2d, multiply_scalar_2d, distance_2d, normalize, cross_product_2d, dot_product_2d, angle_between, vertices_equal, midpoint, rot90, rot180, rot270, points_are_collinear, to_integer
+export {
+    intersect_lines,
+    line_point_pair_to_offset,
+    add_points_2d,
+    subtract_points_2d,
+    multiply_scalar_2d,
+    distance_2d,
+    normalize,
+    cross_product_2d,
+    dot_product_2d,
+    angle_between,
+    vertices_equal,
+    midpoint,
+    rot90,
+    rot180,
+    rot270,
+    points_are_collinear,
+    to_integer
 };
 
