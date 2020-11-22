@@ -1,26 +1,16 @@
-const fs = require("fs");
-const { load_map_data } = require("./load_map_data");
-const { to_waveform_obj, to_waveform_obj_w_faces } = require("./waveform_obj_import_export");
-const { intersect_and_cut, xylines_to_edges, edges_to_edge_vert_list } = require("./map_to_polygons");
-const { remove_doubles } = require("./remove_doubles");
-const { detect_contours, contours_remove_unused_verts, contours_into_vert_edge_list, contours_into_horiz_vert_edge_list } = require("./detect_contours");
-const { inflate_contours } = require("./inflate_contour");
-const { contours_raycast_edges, fill_quads_and_remove_doubles } = require("./contours_to_quads");
-const { Perf } = require("./performance");
+import { MapData } from "./al_jsdoc_types";
+import { Perf } from "./performance";
+import { intersect_and_cut, xylines_to_edges } from "./map_to_polygons";
+import { remove_doubles } from "./remove_doubles";
+import { contours_into_horiz_vert_edge_list, contours_remove_unused_verts, detect_contours } from "./detect_contours";
+import { contours_raycast_edges, fill_quads_and_remove_doubles } from "./contours_to_quads";
+import { to_waveform_obj_w_faces } from "./waveform_obj_import_export";
+import { load_map_data } from "./load_map_data";
+import fs from "fs";
+import { inflate_contours } from "./inflate_contour";
 
 
-/**
- * @typedef {import("./al_jsdoc_types").MapData} MapData
- * */
-
-
-/**
- *
- * @param {string} map_name
- * @param {MapData} map_data
- * @param {[number, number][]} map_spawns
- */
-function perform_inflation_and_contouring(map_name, map_data, map_spawns) {
+function perform_inflation_and_contouring(map_name: string, map_data: MapData, map_spawns: [number, number][]) {
 
     const perf = new Perf();
     perf.start();
