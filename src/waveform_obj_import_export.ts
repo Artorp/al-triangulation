@@ -1,5 +1,4 @@
-import { Point } from "./geometry_types";
-
+import { Point } from "./geometry";
 
 function to_waveform_obj(
     vertices: Point[],

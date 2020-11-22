@@ -1,5 +1,5 @@
 import { intersect_and_cut, xylines_to_edges } from "./map_to_polygons";
-import { Edge, Point } from "./geometry_types";
+import { Edge, Point } from "./geometry";
 
 
 // after cutting at all intersections, remove doubles and build polygon meshes
@@ -12,7 +12,7 @@ import { Edge, Point } from "./geometry_types";
  *
  * @param edge_array
  */
-function remove_doubles(edge_array: Edge[]): {vertices: Point[], edge_indices: [number, number][]} {
+function remove_doubles(edge_array: Edge[]): { vertices: Point[], edge_indices: [number, number][] } {
     // edges is a list of horizontal and vertical edges
     // The vertices inside each edge is ordered s.t. the first vertex has a smaller x- or y-value than the second.
 

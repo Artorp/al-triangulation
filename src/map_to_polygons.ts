@@ -1,5 +1,5 @@
 import { MapData } from "./al_jsdoc_types";
-import { Edge, Point } from "./geometry_types";
+import { Edge, Point } from "./geometry";
 
 
 /**
@@ -47,7 +47,7 @@ function intersect_and_cut(horizontal_edges: Edge[], vertical_edges: Edge[]): Ed
     // assumptions on horizontal_edges and vertical_edges:
     //   the vertices of an edge is ordered, s.t. the first index of an edge has a lower x-value or a lower y-value
 
-    function validate_edges_internal_order(edges: Edge[], axis: "x"|"y" = "x") {
+    function validate_edges_internal_order(edges: Edge[], axis: "x" | "y" = "x") {
         for (const { p1, p2 } of edges) {
             if (!(p1[axis] < p2[axis]))
                 console.warn(`${axis === "x" ? "Horizontal" : "Vertical"} edge ${JSON.stringify(p1)}->${JSON.stringify(p2)} not internally ordered! Intersection test might fail.`);
@@ -74,7 +74,7 @@ function intersect_and_cut(horizontal_edges: Edge[], vertical_edges: Edge[]): Ed
      * @param axis_aligned_edges
      * @param sweep_axis
      */
-    function cut_aligned_edges(axis_aligned_edges: Edge[], sweep_axis: "x"|"y"): Edge[] {
+    function cut_aligned_edges(axis_aligned_edges: Edge[], sweep_axis: "x" | "y"): Edge[] {
         const axis2 = sweep_axis === "x" ? "y" : "x";
 
         const processed_edges: Edge[] = [];
@@ -232,7 +232,7 @@ function intersect_and_cut(horizontal_edges: Edge[], vertical_edges: Edge[]): Ed
  * @param edges
  * @param sweep_axis
  */
-function* group_by_one_axis(edges: Edge[], sweep_axis: "x"|"y"): Generator<[number, number], void, any> {
+function* group_by_one_axis(edges: Edge[], sweep_axis: "x" | "y"): Generator<[number, number], void, any> {
     let last_value = edges[0].p1[sweep_axis];
     let last_idx = 0;
     for (let i = 1; i < edges.length; i++) {

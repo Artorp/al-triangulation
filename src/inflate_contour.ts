@@ -1,5 +1,4 @@
-import { add_points_2d, distance_2d, dot_product_2d, normalize, rot90, subtract_points_2d } from "./geometry";
-import { Point } from "./geometry_types";
+import { add_points_2d, distance_2d, dot_product_2d, normalize, Point, rot90, subtract_points_2d } from "./geometry";
 import { intersect_and_cut, xylines_to_edges } from "./map_to_polygons";
 import { remove_doubles } from "./remove_doubles";
 import { contours_into_vert_edge_list, detect_contours } from "./detect_contours";

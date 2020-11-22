@@ -1,16 +1,17 @@
 import {
     angle_between,
     distance_2d,
+    Edge,
     intersect_lines,
     line_point_pair_to_offset,
     multiply_scalar_2d,
+    Point,
     rot180,
     rot270,
     rot90,
     subtract_points_2d,
     to_integer
 } from "./geometry";
-import { Edge, Point } from "./geometry_types";
 import { group_by_one_axis, intersect_and_cut } from "./map_to_polygons";
 import { remove_doubles } from "./remove_doubles";
 import { build_adjacent_edges_list } from "./detect_contours";

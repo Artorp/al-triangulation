@@ -1,20 +1,20 @@
 import { intersect_and_cut, xylines_to_edges } from "./map_to_polygons";
 import { remove_doubles } from "./remove_doubles";
 import {
+    angle_between,
+    cross_product_2d,
+    distance_2d,
+    Edge,
     intersect_lines,
     line_point_pair_to_offset,
-    subtract_points_2d,
-    distance_2d,
-    cross_product_2d,
-    normalize,
-    dot_product_2d,
-    angle_between,
-    vertices_equal,
     midpoint,
     multiply_scalar_2d,
-    points_are_collinear
+    normalize,
+    Point,
+    points_are_collinear,
+    subtract_points_2d,
+    vertices_equal
 } from "./geometry";
-import { Edge, Point } from "./geometry_types";
 
 
 // Input: vertex array, and edge index array (edges can share vertices)

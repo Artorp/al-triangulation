@@ -1,10 +1,10 @@
-import { Point } from "./geometry_types";
 import { MapData } from "./al_jsdoc_types";
 import { intersect_and_cut, xylines_to_edges } from "./map_to_polygons";
 import { remove_doubles } from "./remove_doubles";
 import { contours_into_horiz_vert_edge_list, contours_remove_unused_verts, detect_contours } from "./detect_contours";
 import { inflate_contours } from "./inflate_contour";
 import { contours_raycast_edges, fill_quads_and_remove_doubles } from "./contours_to_quads";
+import { Point } from "./geometry";
 
 
 /**

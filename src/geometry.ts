@@ -1,4 +1,10 @@
-import { Point } from "./geometry_types";
+export type Point = {
+    x: number, y: number
+}
+
+export type Edge = {
+    p1: Point, p2: Point
+}
 
 /**
  * Change representation from (p1 -> p2) to (p -> p + r) where r is the point delta
