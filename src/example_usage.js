@@ -6,7 +6,7 @@ const { remove_doubles } = require("./remove_doubles");
 const { detect_contours, contours_remove_unused_verts, contours_into_vert_edge_list, contours_into_horiz_vert_edge_list } = require("./detect_contours");
 const { inflate_contours } = require("./inflate_contour");
 const { contours_raycast_edges, fill_quads_and_remove_doubles } = require("./contours_to_quads");
-const { Performance } = require("./performance");
+const { Perf } = require("./performance");
 
 
 /**
@@ -22,7 +22,7 @@ const { Performance } = require("./performance");
  */
 function perform_inflation_and_contouring(map_name, map_data, map_spawns) {
 
-    const perf = new Performance();
+    const perf = new Perf();
     perf.start();
     const spawn_pos = { x: map_spawns[0][0], y: map_spawns[0][1] };
     const [horizontal_edges, vertical_edges] = xylines_to_edges(map_data);

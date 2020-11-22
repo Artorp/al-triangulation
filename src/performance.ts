@@ -1,12 +1,15 @@
 /**
  * @example
- *     const perf = new Performance();
+ *     const perf = new Perf();
  *     perf.start();
  *     // do something
  *     perf.stop();
  *     console.log(perf.durationPretty())
  */
-class Performance {
+class Perf {
+    t0: number;
+    t1: number;
+
     constructor() {
         this.t0 = 0;
         this.t1 = 0;
@@ -21,18 +24,18 @@ class Performance {
     }
 
     /**
-     * @param {string} job_name
+     * @param job_name
      */
-    stopAndPrint(job_name) {
+    stopAndPrint(job_name: string) {
         this.t1 = Date.now();
         console.log(`${job_name} took ${this.durationPretty()}.`);
     }
 
-    duration() {
+    duration(): number {
         return this.t1 - this.t0;
     }
 
-    durationPretty() {
+    durationPretty(): string {
         const delta = this.t1 - this.t0;
         if (delta >= 1000) {
             return `${(delta / 1000).toFixed(2)} s`;
@@ -41,4 +44,4 @@ class Performance {
     }
 }
 
-module.exports = { Performance };
+export { Perf };
