@@ -186,32 +186,6 @@ function points_are_collinear(p1: Point, p2: Point, p3: Point): boolean {
 
 }
 
-
-function _test_fn() {
-    // line from (0, 0) -> (0, 10) and (-5, 5),(5, 5) should meet at point (0, 5)
-    console.log("Expect (0, 5)");
-    console.log(intersect_lines({ x: 0, y: 0 }, { x: 0, y: 10 }, { x: -5, y: 5 }, { x: 10, y: 0 }));
-
-    // line from (0, 0) -> (0, 10) and (0, 0), (0, 10) do not intersect
-    console.log("Expect null");
-    console.log(intersect_lines({ x: 0, y: 0 }, { x: 0, y: 10 }, { x: 0, y: 0 }, { x: 0, y: 10 }));
-
-    // line from (0, 0) -> (0, 10) and (0, 0), (10, 0) intersects inclusive at (0, 0)
-    console.log("Expect (0, 0)");
-    console.log(intersect_lines({ x: 0, y: 0 }, { x: 0, y: 10 }, { x: 0, y: 0 }, { x: 10, y: 0 }));
-
-    // line from (5, 0) -> (15, 0) and (0, 5), (0, 15) do not intersect
-    console.log("Expect null");
-    console.log(intersect_lines({ x: 5, y: 0 }, { x: 10, y: 0 }, { x: 0, y: 5 }, { x: 0, y: 10 }));
-
-    // exclusive check, line from (0, 0) -> (1472, 64) and (1104, 40)->(1104, 48), and (1104, 48)->(1112, 48) do not intersect
-    console.log("Expect (1104, 48) on both");
-    let ray = { x: 1472, y: 64 };
-    ray = multiply_scalar_2d(normalize(ray), 10000);
-    console.log(intersect_lines({ x: 0, y: 0 }, { x: 1472, y: 64 }, { x: 1104, y: 40 }, { x: 0, y: 8 }));
-    console.log(intersect_lines({ x: 0, y: 0 }, { x: 1472, y: 64 }, { x: 1104, y: 48 }, { x: 8, y: 0 }));
-}
-
 export {
     intersect_lines,
     line_point_pair_to_offset,
