@@ -1,17 +1,11 @@
-
-/**
- * @typedef {import("./geometry_types").Point} Point
- * */
+import { Point } from "./geometry_types";
 
 
-/**
- *
- * @param {Point[]} vertices
- * @param {[number, number][]} edge_indices
- * @param {string} object_name
- * @returns {string}
- */
-function to_waveform_obj(vertices, edge_indices, object_name) {
+function to_waveform_obj(
+    vertices: Point[],
+    edge_indices: [number, number][],
+    object_name: string
+): string {
     let waveform_data = `o ${object_name}\n`;
     for (const { x, y } of vertices) {
         waveform_data += `v ${x} ${y} 0\n`;
@@ -22,15 +16,12 @@ function to_waveform_obj(vertices, edge_indices, object_name) {
     return waveform_data;
 }
 
-/**
- *
- * @param {Point[]} vertices
- * @param {[number, number][]} edge_indices
- * @param {[number, number, number, number][]} faces
- * @param {string} object_name
- * @returns {string}
- */
-function to_waveform_obj_w_faces(vertices, edge_indices, faces, object_name) {
+function to_waveform_obj_w_faces(
+    vertices: Point[],
+    edge_indices: [number, number][],
+    faces: [number, number, number, number][],
+    object_name: string
+): string {
     let waveform_data = `o ${object_name}\n`;
     for (const { x, y } of vertices) {
         waveform_data += `v ${x} ${y} 0\n`;
@@ -45,6 +36,6 @@ function to_waveform_obj_w_faces(vertices, edge_indices, faces, object_name) {
 }
 
 
-module.exports = {
+export {
     to_waveform_obj, to_waveform_obj_w_faces
 };
