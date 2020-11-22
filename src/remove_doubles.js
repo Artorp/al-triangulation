@@ -1,4 +1,4 @@
-const { map_data } = require("./import_map_data");
+const { load_map_data } = require("./load_map_data");
 const { intersect_and_cut, xylines_to_edges } = require("./map_to_polygons");
 
 
@@ -60,7 +60,7 @@ function remove_doubles(edge_array) {
 
 
 function _test_fn() {
-    const { data, spawns } = map_data("winter_inn");
+    const { data, spawns } = load_map_data("winter_inn");
     const [horizontal_edges, vertical_edges] = xylines_to_edges(data);
     console.log(`${horizontal_edges.length} horizontal edges and ${vertical_edges.length} vertical edges`);
 

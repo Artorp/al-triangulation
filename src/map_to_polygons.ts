@@ -261,8 +261,8 @@ function edges_to_edge_vert_list(
 
 
 async function _test_fn() {
-    const { map_data } = await import("./import_map_data");
-    const { data, spawns } = map_data("winter_inn");
+    const { load_map_data } = await import("./load_map_data");
+    const { data, spawns } = load_map_data("winter_inn");
     const [horizontal_edges, vertical_edges] = xylines_to_edges(data);
     console.log(`${horizontal_edges.length} horizontal edges and ${vertical_edges.length} vertical edges`);
 

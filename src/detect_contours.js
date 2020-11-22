@@ -1,4 +1,4 @@
-const { map_data } = require("./import_map_data");
+const { load_map_data } = require("./load_map_data");
 const { intersect_and_cut, xylines_to_edges } = require("./map_to_polygons")
 const { remove_doubles } = require("./remove_doubles")
 const { intersect_lines, line_point_pair_to_offset, subtract_points_2d, distance_2d, cross_product_2d, normalize, dot_product_2d, angle_between, vertices_equal, midpoint, multiply_scalar_2d, points_are_collinear } = require("./geometry");
@@ -366,7 +366,7 @@ function contours_into_horiz_vert_edge_list(contours) {
 
 
 function _test_fn() {
-    const { data, spawns } = map_data("winter_inn");
+    const { data, spawns } = load_map_data("winter_inn");
     const spawn_pos = { x: spawns[0][0], y: spawns[0][1] };
     const [horizontal_edges, vertical_edges] = xylines_to_edges(data);
     console.log(`${horizontal_edges.length} horizontal edges and ${vertical_edges.length} vertical edges`);

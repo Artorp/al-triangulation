@@ -1,4 +1,3 @@
-const { map_data } = require("./import_map_data");
 const { fill_quads_and_remove_doubles } = require("./contours_to_quads");
 const { contours_raycast_edges } = require("./contours_to_quads");
 const { contours_into_horiz_vert_edge_list } = require("./detect_contours");
