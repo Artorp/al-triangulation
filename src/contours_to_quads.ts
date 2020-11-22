@@ -1,30 +1,34 @@
-const { remove_doubles } = require("./remove_doubles");
-const { contours_into_vert_edge_list, build_adjacent_edges_list } = require("./detect_contours");
-const { intersect_lines, line_point_pair_to_offset, subtract_points_2d, multiply_scalar_2d, rot90, rot180, rot270, to_integer, distance_2d, angle_between } = require("./geometry");
-const { intersect_and_cut, group_by_one_axis } = require("./map_to_polygons");
+import {
+    angle_between,
+    distance_2d,
+    intersect_lines,
+    line_point_pair_to_offset,
+    multiply_scalar_2d,
+    rot180,
+    rot270,
+    rot90,
+    subtract_points_2d,
+    to_integer
+} from "./geometry";
+import { Edge, Point } from "./geometry_types";
+import { group_by_one_axis, intersect_and_cut } from "./map_to_polygons";
+import { remove_doubles } from "./remove_doubles";
+import { build_adjacent_edges_list } from "./detect_contours";
 
 
 const RAY_LENGTH = 10000;
 
 /**
- * @typedef {import("./geometry_types").Point} Point
- * @typedef {import("./geometry_types").Edge} Edge
- * */
-
-/**
  * For each contour vertex, raycast a line to the closest contour edge in all cardinal directions towards walkable
  * space. The resulting edges are confined to walkable space, and ready to be cut and joined into faces.
  *
- * @param {Point[][]} contours
- * @returns {{cut_contours: Point[][], internal_edges_cut: Edge[]}}
+ * @param contours
  */
-function contours_raycast_edges(contours) {
+function contours_raycast_edges(contours: Point[][]): { cut_contours: Point[][], internal_edges_cut: Edge[] } {
 
     // create collection of edges for collision
-    /** @type {Edge[]} */
-    const contour_collision_horiz = [];
-    /** @type {Edge[]} */
-    const contour_collision_vert = [];
+    const contour_collision_horiz: Edge[] = [];
+    const contour_collision_vert: Edge[] = [];
     for (const contour of contours) {
         for (let i = 0; i < contour.length; i++) {
             const p1 = contour[i];
@@ -37,10 +41,8 @@ function contours_raycast_edges(contours) {
         }
     }
 
-    /** @type {Edge[]} */
-    let new_horizontal_edges = [];
-    /** @type {Edge[]} */
-    let new_vertical_edges = [];
+    let new_horizontal_edges: Edge[] = [];
+    let new_vertical_edges: Edge[] = [];
 
     for (const contour of contours) {
         for (let i = 0; i < contour.length; i++) {
@@ -69,9 +71,9 @@ function contours_raycast_edges(contours) {
                 }
                 const closest_intersection = intersections[0];
                 if (closest_intersection.is_horizontal) {
-                    new_horizontal_edges.push({p1: v1, p2: closest_intersection.intersection_point});
+                    new_horizontal_edges.push({ p1: v1, p2: closest_intersection.intersection_point });
                 } else {
-                    new_vertical_edges.push({p1: v1, p2: closest_intersection.intersection_point});
+                    new_vertical_edges.push({ p1: v1, p2: closest_intersection.intersection_point });
                 }
             }
         }
@@ -97,16 +99,9 @@ function contours_raycast_edges(contours) {
     }
 
     // remove duplicate edges
-    /**
-     *
-     * @param {Edge[]} axis_aligned_edges
-     * @param {"x"|"y"} sweep_axis y for horizontal, x for vertical
-     * @returns {Edge[]}
-     */
-    function remove_duplicates(axis_aligned_edges, sweep_axis){
+    function remove_duplicates(axis_aligned_edges: Edge[], sweep_axis: "x" | "y"): Edge[] {
         const varying_axis = sweep_axis === "x" ? "y" : "x";
-        /** @type {Edge[]} */
-        const non_duplicates = [];
+        const non_duplicates: Edge[] = [];
         for (const [from, to] of group_by_one_axis(axis_aligned_edges, sweep_axis)) {
             for (let i = from; i < to; i++) {
                 let found_same_edge = false;
@@ -179,8 +174,7 @@ function contours_raycast_edges(contours) {
 
             contour_with_collisions.push(p0);
             for (const v of collision_major_values) {
-                /** @type Point */
-                let p = { x: -1, y: -1 };
+                const p: Point = { x: -1, y: -1 };
                 p[contour_same_val_axis] = contour_major_value;
                 p[sweep_axis] = v;
                 contour_with_collisions.push(p);
@@ -188,7 +182,6 @@ function contours_raycast_edges(contours) {
         }
         cut_contours.push(contour_with_collisions);
     }
-
 
 
     // cut stage 2: find all intra-intersections between intersections
@@ -206,21 +199,17 @@ function contours_raycast_edges(contours) {
  * Left turns generate no rays, straight ahead generates a ray to the left, and right turns generate rays to the
  * left and straight ahead. They rays should be cast with p1 as the origin.
  *
- * @param {Point} p0
- * @param {Point} p1
- * @param {Point} p2
- * @returns {Generator<Point, void, *>}
+ * @param p0
+ * @param p1
+ * @param p2
+ * @returns
  */
-function* generate_rays_inward(p0, p1, p2) {
+function* generate_rays_inward(p0: Point, p1: Point, p2: Point): Generator<Point, void, any> {
     const v1 = subtract_points_2d(p1, p0);
     const v2 = subtract_points_2d(p2, p1);
 
-    /** @param {Point} point
-     * @returns {Point} */
-    let point_up_transformation;
-    /** @param {Point} point
-     * @returns {Point} */
-    let inverse_transformation;
+    let point_up_transformation: (point: Point) => Point;
+    let inverse_transformation: (point: Point) => Point;
 
     if (v1.x === 0) {
         if (v1.y > 0) {
@@ -229,9 +218,7 @@ function* generate_rays_inward(p0, p1, p2) {
             inverse_transformation = rot180;
         } else {
             // v1 points up
-            /** @param {Point} p1 */
             point_up_transformation = p1 => p1;
-            /** @param {Point} p1 */
             inverse_transformation = p1 => p1;
         }
     } else {
@@ -255,8 +242,7 @@ function* generate_rays_inward(p0, p1, p2) {
                 `p0: ${p0}, p1: ${p1}, p2: ${p2}`)
         } else {
             // v2_t points up, v1 and v2 are parallel and v1, v2, v3 are collinear. Generate ray west.
-            /** @type {Point} */
-            let ray = { x: -1, y: 0 };
+            let ray: Point = { x: -1, y: 0 };
             ray = multiply_scalar_2d(ray, RAY_LENGTH);
             ray = inverse_transformation(ray);
             yield ray;
@@ -265,8 +251,7 @@ function* generate_rays_inward(p0, p1, p2) {
         if (v2_t.x > 0) {
             // v2_t points right, this is a right turn, generate ray west and north
 
-            /** @type {Point} */
-            let ray = { x: -1, y: 0 };
+            let ray: Point = { x: -1, y: 0 };
             ray = multiply_scalar_2d(ray, RAY_LENGTH);
             ray = inverse_transformation(ray);
             yield ray;
@@ -283,24 +268,23 @@ function* generate_rays_inward(p0, p1, p2) {
 /**
  * Perform binary searches on sorted list of edges to find all edges within a given range
  *
- * @param {Edge[]} axis_aligned_edges pre-sorted axis-aligned edges
- * @param {"x"|"y"} sweep_axis which axis to search through, y for horizontal, x for vertical
- * @param {number} lower_inc
- * @param {number} upper_inc
- * @returns {[number, number]} from index (inclusive) to index (exclusive) of edges that are in range
+ * @param axis_aligned_edges pre-sorted axis-aligned edges
+ * @param sweep_axis which axis to search through, y for horizontal, x for vertical
+ * @param lower_inc lower bound (inclusive) of edges to include
+ * @param upper_inc upper bound (inclusive) of edges to include
+ * @returns from index (inclusive) to index (exclusive) of edges that are in range
  */
-function binary_search_range(axis_aligned_edges, sweep_axis, lower_inc, upper_inc) {
-    /**
-     * @param {Edge[]} axis_aligned_edges pre-sorted axis-aligned edges
-     * @param {"x"|"y"} sweep_axis which axis to search through, y for horizontal, x for vertical
-     * @param {number} lower_inc
-     * @returns {number}
-     */
-    function binary_search_leftmost(axis_aligned_edges, sweep_axis, lower_inc) {
+function binary_search_range(
+    axis_aligned_edges: Edge[],
+    sweep_axis: "x" | "y",
+    lower_inc: number,
+    upper_inc: number
+): [number, number] {
+    function binary_search_leftmost(axis_aligned_edges: Edge[], sweep_axis: "x" | "y", lower_inc: number): number {
         let left = 0;
         let right = axis_aligned_edges.length;
         while (left < right) {
-            const m = Math.floor((left + right)/2);
+            const m = Math.floor((left + right) / 2);
             if (axis_aligned_edges[m].p1[sweep_axis] < lower_inc) {
                 left = m + 1;
             } else {
@@ -310,17 +294,11 @@ function binary_search_range(axis_aligned_edges, sweep_axis, lower_inc, upper_in
         return left;
     }
 
-    /**
-     * @param {Edge[]} axis_aligned_edges pre-sorted axis-aligned edges
-     * @param {"x"|"y"} sweep_axis which axis to search through, y for horizontal, x for vertical
-     * @param {number} upper_inc
-     * @returns {number}
-     */
-    function binary_search_rightmost(axis_aligned_edges, sweep_axis, upper_inc) {
+    function binary_search_rightmost(axis_aligned_edges: Edge[], sweep_axis: "x" | "y", upper_inc: number): number {
         let left = 0;
         let right = axis_aligned_edges.length;
         while (left < right) {
-            const m = Math.floor((left + right)/2);
+            const m = Math.floor((left + right) / 2);
             if (axis_aligned_edges[m].p1[sweep_axis] > upper_inc) {
                 right = m;
             } else {
@@ -337,14 +315,14 @@ function binary_search_range(axis_aligned_edges, sweep_axis, lower_inc, upper_in
 }
 
 /**
- * Helper function to find turn type
+ * Helper function to find turn type based on three consecutive points of a contour
  *
- * @param {Point} p1 first point
- * @param {Point} p2 second point, point to check
- * @param {Point} p3 third point
- * @returns {"straight"|"turn"|"right"|"left"}
+ * @param p1 first point
+ * @param p2 second point, point to check
+ * @param p3 third point
+ * @param a string indicating which way the turn goes
  */
-function get_turn_type(p1, p2, p3) {
+function get_turn_type(p1: Point, p2: Point, p3: Point): "straight" | "turn" | "right" | "left" {
     // measure angle from p1 to p2, then from p1 to p3.
 
     const p1_p2 = subtract_points_2d(p2, p1);
@@ -372,31 +350,29 @@ function get_turn_type(p1, p2, p3) {
  * Using previously cut contours and internal edges, remove doubles and fill empty quads s.t.
  * all quads cover walkable space.
  *
- * @param {Point[][]} cut_contours
- * @param {Edge[]} internal_edges_cut
- * @returns {{vertices: Point[], edge_indices: ([number, number][]), faces: [number, number, number, number][]}}
+ * @param cut_contours
+ * @param internal_edges_cut
+ * @returns vertices, edges, and faces, edges and faces are indices into the vertices list
  */
-function fill_quads_and_remove_doubles(cut_contours, internal_edges_cut) {
+function fill_quads_and_remove_doubles(
+    cut_contours: Point[][],
+    internal_edges_cut: Edge[]
+): { vertices: Point[], edge_indices: ([number, number][]), faces: [number, number, number, number][] } {
 
     // convert contours to edges
-    /** @type {Edge[]} */
-    const edges = [];
+    const edges: Edge[] = [];
 
-    /** @type Object<number, Object<number, boolean>> */
-    const contour_holes_x_y = {};
-    /**@param {Point} p
-     */
-    const add_vertex_to_contour_hole_set = (p) => {
-        if (contour_holes_x_y[p.x] == null) {
-            contour_holes_x_y[p.x] = {};
+    const contour_holes_x_y: { [x: number]: { [y: number]: boolean | undefined } | undefined } = {};
+    const add_vertex_to_contour_hole_set = (p: Point) => {
+        let contour_holes_y = contour_holes_x_y[p.x];
+        if (contour_holes_y == null) {
+            contour_holes_y = {};
+            contour_holes_x_y[p.x] = contour_holes_y;
         }
-        contour_holes_x_y[p.x][p.y] = true;
+        contour_holes_y[p.y] = true;
     }
-    /**@param {Point} p
-     * @returns {boolean}
-     */
-    const vertex_is_contour_hole = (p) => {
-         return contour_holes_x_y[p.x] && !!contour_holes_x_y[p.x][p.y];
+    const vertex_is_contour_hole = (p: Point): boolean => {
+        return !!contour_holes_x_y[p.x] && !!contour_holes_x_y[p.x]![p.y];
     }
 
     for (const contour of cut_contours) {
@@ -451,17 +427,14 @@ function fill_quads_and_remove_doubles(cut_contours, internal_edges_cut) {
 
     const connected_edges = build_adjacent_edges_list(vertices, edge_indices);
 
-    /** @type {[number, number, number, number][]} */
-    const faces = [];
+    const faces: [number, number, number, number][] = [];
 
-    // function that finds
     /**
      * Helper function that finds a connected vertex to the south;
      *
-     * @param {number} p_idx
-     * @returns {number|null}
+     * @param p_idx
      */
-    const find_connected_vertex_south = (p_idx) => {
+    const find_connected_vertex_south = (p_idx: number): number | null => {
         const p = vertices[p_idx];
         let found_south_v = null;
         for (const connected_edge_idx of connected_edges[p_idx]) {
@@ -503,7 +476,4 @@ function fill_quads_and_remove_doubles(cut_contours, internal_edges_cut) {
     return { vertices, edge_indices, faces };
 }
 
-
-module.exports = {
-    contours_raycast_edges, fill_quads_and_remove_doubles
-};
+export { contours_raycast_edges, fill_quads_and_remove_doubles };
