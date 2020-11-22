@@ -1,11 +1,5 @@
-const { map_data } = require("./import_map_data");
-
-
-/**
- * @typedef {import("./geometry_types").Point} Point
- * @typedef {import("./geometry_types").Edge} Edge
- * @typedef {import("./al_jsdoc_types").MapData} MapData
- * */
+import { MapData } from "./al_jsdoc_types";
+import { Edge, Point } from "./geometry_types";
 
 
 /**
@@ -15,7 +9,7 @@ const { map_data } = require("./import_map_data");
  * @param {MapData} map_data
  * @returns {[Edge[], Edge[]]}
  */
-function xylines_to_edges(map_data) {
+function xylines_to_edges(map_data: MapData) {
     const { x_lines, y_lines } = map_data;
     const vertical_edges = [];
     const horizontal_edges = [];
@@ -34,11 +28,10 @@ function xylines_to_edges(map_data) {
  * Given a list of horizontal and vertical edges, find all intersections between all edges and cut the edges
  * at those intersection points. The resulting list of edges have no shared vertices between each other.
  *
- * @param {Edge[]} horizontal_edges
- * @param {Edge[]} vertical_edges
- * @returns {Edge[]}
+ * @param horizontal_edges
+ * @param vertical_edges
  */
-function intersect_and_cut(horizontal_edges, vertical_edges) {
+function intersect_and_cut(horizontal_edges: Edge[], vertical_edges: Edge[]): Edge[] {
     // find all intersections, and split edges if intersections found
 
     // Types of intersections:
@@ -54,11 +47,7 @@ function intersect_and_cut(horizontal_edges, vertical_edges) {
     // assumptions on horizontal_edges and vertical_edges:
     //   the vertices of an edge is ordered, s.t. the first index of an edge has a lower x-value or a lower y-value
 
-    /**
-     * @param {Edge[]} edges
-     * @param {"x"|"y"} axis
-     */
-    function validate_edges_internal_order(edges, axis = "x") {
+    function validate_edges_internal_order(edges: Edge[], axis: "x"|"y" = "x") {
         for (const { p1, p2 } of edges) {
             if (!(p1[axis] < p2[axis]))
                 console.warn(`${axis === "x" ? "Horizontal" : "Vertical"} edge ${JSON.stringify(p1)}->${JSON.stringify(p2)} not internally ordered! Intersection test might fail.`);
@@ -82,23 +71,21 @@ function intersect_and_cut(horizontal_edges, vertical_edges) {
      * Cut all edges that are parallel with each other. If they overlap, cut such that no edges overlap and vertices
      * are preserved (removing vertices that are on top of each other, doubles)
      *
-     * @param {Edge[]} axis_aligned_edges
-     * @param {"x"|"y"} sweep_axis
-     * @returns {Edge[]}
+     * @param axis_aligned_edges
+     * @param sweep_axis
      */
-    function cut_aligned_edges(axis_aligned_edges, sweep_axis) {
+    function cut_aligned_edges(axis_aligned_edges: Edge[], sweep_axis: "x"|"y"): Edge[] {
         const axis2 = sweep_axis === "x" ? "y" : "x";
 
-        /** @type {Edge[]} */
-        const processed_edges = [];
+        const processed_edges: Edge[] = [];
 
         for (const [from, to] of group_by_one_axis(axis_aligned_edges, sweep_axis)) {
             // check for intersections, if so, split and combine
-            const unchecked = axis_aligned_edges.slice(from, to);
-            const checked = [];
+            const unchecked: Edge[] = axis_aligned_edges.slice(from, to);
+            const checked: Edge[] = [];
             while (unchecked.length > 1) {
+                const e0: Edge = unchecked.pop()!;
                 let found_intersection = false;
-                const e0 = /** @type {Edge} */ (unchecked.pop());
                 // rely on the invariant property that all edges' vertices are internally ordered to be sorted by the
                 // axis that varies
                 const e0_min = e0.p1[axis2];
@@ -151,11 +138,11 @@ function intersect_and_cut(horizontal_edges, vertical_edges) {
 
     const working_edge_list_h = [...case1_h_edges];
     const working_edge_list_v = [...case1_v_edges];
-    const processed_h_edges = [];
-    const processed_v_edges = [];
+    const processed_h_edges: Edge[] = [];
+    const processed_v_edges: Edge[] = [];
 
     while (working_edge_list_h.length > 0) {
-        const edge_h = /** @type {Edge} */ (working_edge_list_h.pop());
+        const edge_h = working_edge_list_h.pop()!;
         const edge_h_y = edge_h.p1.y;
         // intersection check vs all vertical edges
         let found_intersection = false;
@@ -242,12 +229,10 @@ function intersect_and_cut(horizontal_edges, vertical_edges) {
  * returned. The edges must be either all vertical or all horizontal, and be sorted asc by their orthogonal axis
  * (x-axis for vertical, y-axis for horizontal)
  *
- * @param {Edge[]} edges
- * @param {"x"|"y"} sweep_axis
- * @returns {Generator<[number, number], void, *>}
+ * @param edges
+ * @param sweep_axis
  */
-function* group_by_one_axis(edges, sweep_axis) {
-    /** @type {number} */
+function* group_by_one_axis(edges: Edge[], sweep_axis: "x"|"y"): Generator<[number, number], void, any> {
     let last_value = edges[0].p1[sweep_axis];
     let last_idx = 0;
     for (let i = 1; i < edges.length; i++) {
@@ -261,16 +246,11 @@ function* group_by_one_axis(edges, sweep_axis) {
     yield [last_idx, edges.length];
 }
 
-/**
- *
- * @param {Edge[]} edges
- * @returns {{vertices: Point[], edge_indices: [number, number][]}}
- */
-function edges_to_edge_vert_list(edges) {
-    /** @type {Point[]} */
-    const vertices = [];
-    /** @type {[number, number][]} */
-    const edge_indices = [];
+function edges_to_edge_vert_list(
+    edges: Edge[]
+): { vertices: Point[], edge_indices: [number, number][] } {
+    const vertices: Point[] = [];
+    const edge_indices: [number, number][] = [];
     for (const { p1, p2 } of edges) {
         vertices.push(p1, p2);
         const vl = vertices.length;
@@ -280,7 +260,8 @@ function edges_to_edge_vert_list(edges) {
 }
 
 
-function _test_fn() {
+async function _test_fn() {
+    const { map_data } = await import("./import_map_data");
     const { data, spawns } = map_data("winter_inn");
     const [horizontal_edges, vertical_edges] = xylines_to_edges(data);
     console.log(`${horizontal_edges.length} horizontal edges and ${vertical_edges.length} vertical edges`);
@@ -303,12 +284,11 @@ function _test_fn() {
     const edges = intersect_and_cut(horizontal_edges, vertical_edges);
     const { vertices, edge_indices } = edges_to_edge_vert_list(edges);
 
-    const fs = require("fs");
+    const fs = await import("fs");
     const { to_waveform_obj } = require("./waveform_obj_import_export");
 
     const as_waveform = to_waveform_obj(vertices, edge_indices, "AdventureLandMapData");
     fs.writeFileSync("output_data.obj", as_waveform, { encoding: "utf8" });
 }
 
-
-module.exports = { intersect_and_cut, xylines_to_edges, edges_to_edge_vert_list, group_by_one_axis };
+export { intersect_and_cut, xylines_to_edges, edges_to_edge_vert_list, group_by_one_axis };
