@@ -1,29 +1,22 @@
-const { load_map_data } = require("./load_map_data");
-const { intersect_and_cut, xylines_to_edges } = require("./map_to_polygons");
-const { remove_doubles } = require("./remove_doubles");
-const { line_point_pair_to_offset, subtract_points_2d, distance_2d, cross_product_2d, normalize, dot_product_2d, angle_between, vertices_equal, midpoint, multiply_scalar_2d, rot90, add_points_2d } = require("./geometry");
-const { detect_contours, contours_into_vert_edge_list } = require("./detect_contours");
-
-
-/**
- * @typedef {import("./geometry_types").Point} Point
- * */
-
+import { add_points_2d, distance_2d, dot_product_2d, normalize, rot90, subtract_points_2d } from "./geometry";
+import { Point } from "./geometry_types";
+import { intersect_and_cut, xylines_to_edges } from "./map_to_polygons";
+import { remove_doubles } from "./remove_doubles";
+import { contours_into_vert_edge_list, detect_contours } from "./detect_contours";
 
 /**
  * Inflate previously generated contours
  *
- * @param {Point[][]} contours
- * @returns {Point[][]}
+ * @param contours
+ * @returns
  */
-function inflate_contours(contours) {
+function inflate_contours(contours: Point[][]): Point[][] {
 
     console.log("Inflating...");
     const inflated_contours = [];
     for (const contour of contours) {
         // console.log(`Input length: ${contour.length} vertices.`);
-        /** @type {Point[]} */
-        const generated_contour = [];
+        const generated_contour: Point[] = [];
         for (let i = 0; i < contour.length; i++) {
             const v0_idx = i;
             const v1_idx = (i + 1) % contour.length;
@@ -60,16 +53,16 @@ function inflate_contours(contours) {
 }
 
 /**
+ * Given three consecutive points of a contour, generate one or two inflated points depending on if the points
+ * turn left, right, or form a straight path
  *
- * @param {Point} v1
- * @param {Point} v2
- * @param {Point} v3
- * @returns {Point[]}
+ * @param v1
+ * @param v2
+ * @param v3
  */
-function create_inflated_points_by_vertices(v1, v2, v3) {
+function create_inflated_points_by_vertices(v1: Point, v2: Point, v3: Point): Point[] {
     // create contours for v2 vertex
-    /** @type {Point[]} */
-    const new_points = [];
+    const new_points: Point[] = [];
     // calculate normal vector for both
     const n1 = rot90(normalize(subtract_points_2d(v2, v1)));
     const n2 = rot90(normalize(subtract_points_2d(v3, v2)));
@@ -99,35 +92,35 @@ function create_inflated_points_by_vertices(v1, v2, v3) {
 }
 
 /**
+ * Move a vertex in two directions given by two normal vectors, used for bends and turns
  *
- * @param {Point} v
- * @param {Point} n1
- * @param {Point} n2
- * @returns {Point}
+ * @param v vertex to move
+ * @param n1 first normal direction
+ * @param n2 second normal direction
  */
-function move_by_normals(v, n1, n2) {
+function move_by_normals(v: Point, n1: Point, n2: Point): Point {
     const d1 = direction_to_char_offset(n1);
     const d2 = direction_to_char_offset(n2);
     return add_points_2d(add_points_2d(v, d1), d2);
 }
 
 /**
+ * Move a vertex in one direction as given by one normal vector, used by straight paths
  *
- * @param {Point} v
- * @param {Point} n1
- * @returns {Point}
+ * @param v vertex to move
+ * @param n1 normal direction
  */
-function move_by_normal(v, n1) {
+function move_by_normal(v: Point, n1: Point): Point {
     const d = direction_to_char_offset(n1);
     return add_points_2d(v, d);
 }
 
 /**
+ * Converts a cardinal direction to the proper offset to account for character collision dimensions
  *
- * @param {Point} direction
- * @returns {Point}
+ * @param direction a normalized (unit length) direction vector
  */
-function direction_to_char_offset(direction) {
+function direction_to_char_offset(direction: Point): Point {
     // TODO: get programmatically?
     const h_offset = 8; // from character.base.h, how much to move walls left or right
     const v_down_offset = 7; // from character.base.v // downwards (increase y)
@@ -147,7 +140,8 @@ function direction_to_char_offset(direction) {
 }
 
 
-function _test_fn() {
+async function _test_fn() {
+    const { load_map_data } = await import("./load_map_data");
     const { data, spawns } = load_map_data("winter_inn");
     const spawn_pos = { x: spawns[0][0], y: spawns[0][1] };
     const [horizontal_edges, vertical_edges] = xylines_to_edges(data);
@@ -180,4 +174,4 @@ function _test_fn() {
     fs.writeFileSync("output_data.obj", as_waveform, { encoding: "utf8" });
 }
 
-module.exports = { inflate_contours };
+export { inflate_contours };
