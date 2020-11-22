@@ -1,13 +1,20 @@
-const { load_map_data } = require("./load_map_data");
-const { intersect_and_cut, xylines_to_edges } = require("./map_to_polygons")
-const { remove_doubles } = require("./remove_doubles")
-const { intersect_lines, line_point_pair_to_offset, subtract_points_2d, distance_2d, cross_product_2d, normalize, dot_product_2d, angle_between, vertices_equal, midpoint, multiply_scalar_2d, points_are_collinear } = require("./geometry");
-
-
-/**
- * @typedef {import("./geometry_types").Point} Point
- * @typedef {import("./geometry_types").Edge} Edge
- * */
+import { intersect_and_cut, xylines_to_edges } from "./map_to_polygons";
+import { remove_doubles } from "./remove_doubles";
+import {
+    intersect_lines,
+    line_point_pair_to_offset,
+    subtract_points_2d,
+    distance_2d,
+    cross_product_2d,
+    normalize,
+    dot_product_2d,
+    angle_between,
+    vertices_equal,
+    midpoint,
+    multiply_scalar_2d,
+    points_are_collinear
+} from "./geometry";
+import { Edge, Point } from "./geometry_types";
 
 
 // Input: vertex array, and edge index array (edges can share vertices)
@@ -18,23 +25,20 @@ const { intersect_lines, line_point_pair_to_offset, subtract_points_2d, distance
  * the walkable space. A contour is defined by a list of vertices, with an edge between each consecutive
  * vertex, and the first and last vertex connected.
  *
- * @param {Point[]} vertices
- * @param {[number, number][]} edge_indices
- * @param {Point} spawn_position
- * @returns {Point[][]}
+ * @param vertices
+ * @param edge_indices
+ * @param spawn_position
  */
-function detect_contours(vertices, edge_indices, spawn_position){
+function detect_contours(vertices: Point[], edge_indices: [number, number][], spawn_position: Point): Point[][] {
 
     // build vertex->edge index that for each vertex, lists all edges (by index) connected to this vertex
     const vertices_with_connected_edges = build_adjacent_edges_list(vertices, edge_indices);
     console.log("Using spawn position ", spawn_position);
 
-    /** @type {Point[][]} */
-    const found_contours = [];
+    const found_contours: Point[][] = [];
 
     // searchable_edges are all edges (by index) that can be used as raycast targets
-    /** @type {number[]} */
-    const searchable_edges = [];
+    const searchable_edges: number[] = [];
     for (let i = 0; i < edge_indices.length; i++) {
         searchable_edges.push(i);
     }
@@ -56,7 +60,7 @@ function detect_contours(vertices, edge_indices, spawn_position){
         }
         if (raycast_target_edge_idx === -1) {
             console.warn(`All remaining polygons are collinear with the spawn point, ${searchable_edges.length} edges.`);
-            console.warn("Contents of the remaining edges", "\nedges:\n", searchable_edges.map(e=>edge_indices[e]), "\nvertices\n", vertices);
+            console.warn("Contents of the remaining edges", "\nedges:\n", searchable_edges.map(e => edge_indices[e]), "\nvertices\n", vertices);
             break;
         }
         // use the middle point of the found edge as the raycast target angle
@@ -70,11 +74,9 @@ function detect_contours(vertices, edge_indices, spawn_position){
 
         // perform raycast...
 
-        /**
-         * @typedef {{e_idx: number, intersection_point: Point, dist: number, is_contour: boolean}} Intersection
-         */
-        /** @type {Intersection[]} */
-        const intersections = [];
+        type Intersection = { e_idx: number, intersection_point: Point, dist: number, is_contour: boolean };
+
+        const intersections: Intersection[] = [];
 
         // ...on all searchable edges
         for (let i = 0; i < searchable_edges.length; i++) {
@@ -84,7 +86,7 @@ function detect_contours(vertices, edge_indices, spawn_position){
             const intersection_point = intersect_lines(spawn_position, raycast_ray, ep, er);
             if (intersection_point != null) {
                 const dist = distance_2d(spawn_position, intersection_point);
-                intersections.push({e_idx, intersection_point, dist, is_contour: false});
+                intersections.push({ e_idx, intersection_point, dist, is_contour: false });
             }
         }
 
@@ -103,7 +105,7 @@ function detect_contours(vertices, edge_indices, spawn_position){
                 const intersection_point = intersect_lines(spawn_position, raycast_ray, ep, er);
                 if (intersection_point) {
                     const dist = distance_2d(spawn_position, intersection_point);
-                    intersections.push({e_idx: -1, intersection_point, dist, is_contour: true});
+                    intersections.push({ e_idx: -1, intersection_point, dist, is_contour: true });
                 }
             }
         }
@@ -129,10 +131,9 @@ function detect_contours(vertices, edge_indices, spawn_position){
 
         // use simple depth-first search to remove all edges from current polygon from the list of searchable edges
         const open_edge_set = [closest_intersection.e_idx];
-        /** @type {Object<number, boolean|undefined>} */
-        const seen_edge_indices = {};
+        const seen_edge_indices: { [key: number]: boolean | undefined } = {};
         while (open_edge_set.length > 0) {
-            const edge_idx = /** @type {number} */ (open_edge_set.pop()); // edge is an index of edge_indices
+            const edge_idx = open_edge_set.pop()!; // edge is an index of edge_indices
             seen_edge_indices[edge_idx] = true;
             // add edge index to list of edges to remove
             // find all connected edges
@@ -176,8 +177,8 @@ function detect_contours(vertices, edge_indices, spawn_position){
         // Begin traversing graph. If the first edge already points left from the perspective of the ray, keep it.
         // Otherwise, swap order of vertices.
 
-        let vertex1_idx;
-        let vertex2_idx;
+        let vertex1_idx: number;
+        let vertex2_idx: number;
         if (cross_product > 0) {
             contour_mesh_vertices.push(vertices[edge_vertex_indices[0]], vertices[edge_vertex_indices[1]]);
             vertex1_idx = edge_vertex_indices[0];
@@ -191,8 +192,7 @@ function detect_contours(vertices, edge_indices, spawn_position){
         while (!done) {
             // find all potential next edges
             const edges = vertices_with_connected_edges[vertex2_idx];
-            /** @type {[number, number][]} */
-            const edges_ordered = [];
+            const edges_ordered: [number, number][] = [];
             for (const edge_idx of edges) {
                 const edge = edge_indices[edge_idx];
                 if (edge[0] === vertex2_idx) {
@@ -202,8 +202,7 @@ function detect_contours(vertices, edge_indices, spawn_position){
                 }
             }
             // remove the current edge
-            /** @type [number, number] */
-            let angle_compare_edge_indices = [-1, -1];  // TODO: assign in a way where the type system knows
+            let angle_compare_edge_indices: [number, number] = [-1, -1];
             for (let i = 0; i < edges_ordered.length; i++) {
                 if (edges_ordered[i][1] === vertex1_idx) {
                     [angle_compare_edge_indices] = edges_ordered.splice(i, 1);
@@ -257,13 +256,11 @@ function detect_contours(vertices, edge_indices, spawn_position){
  *     vertex_to_connected_edges[0].length, "edges");
  * console.log("One of them are:", edge_indices[vertex_to_connected_edges[0]]);
  *
- * @param {Point[]} vertices
- * @param {[number, number][]} edge_indices
- * @returns {number[][]}
+ * @param vertices
+ * @param edge_indices
  */
-function build_adjacent_edges_list(vertices, edge_indices) {
-    /** @type {number[][]} */
-    const vertices_with_connected_edges = [];
+function build_adjacent_edges_list(vertices: Point[], edge_indices: [number, number][]): number[][] {
+    const vertices_with_connected_edges: number[][] = [];
     for (let i = 0; i < vertices.length; i++) {
         vertices_with_connected_edges.push([]);
     }
@@ -279,11 +276,10 @@ function build_adjacent_edges_list(vertices, edge_indices) {
 /**
  * Remove all vertices of a contour if that vertex is not part of an angle / bend
  *
- * @param {Point[][]} contours
- * @returns {Point[][]}
+ * @param contours
  */
-function contours_remove_unused_verts(contours) {
-    const stripped_contours = [];
+function contours_remove_unused_verts(contours: Point[][]) {
+    const stripped_contours: Point[][] = [];
     for (const contour of contours) {
         const contour_stripped = [];
         for (let i = 0; i < contour.length; i++) {
@@ -303,13 +299,11 @@ function contours_remove_unused_verts(contours) {
 /**
  * Convert a list of contours into a vertices and edge indices list.
  *
- * @param {Point[][]} contours
- * @returns {{vertices: Point[], edge_indices: [number, number][]}}
+ * @param contours
  */
-function contours_into_vert_edge_list(contours) {
+function contours_into_vert_edge_list(contours: Point[][]): { vertices: Point[], edge_indices: [number, number][] } {
     const vertices = [];
-    /** @type [number, number][] */
-    const edge_indices = [];
+    const edge_indices: [number, number][] = [];
     for (const contour of contours) {
         if (contour.length <= 1) continue;
         const first_vertex_idx = vertices.push(contour[0]) - 1;
@@ -326,18 +320,14 @@ function contours_into_vert_edge_list(contours) {
 /**
  * Convert a list of contours into a horizontal and vertical edge list, grouped by axis
  *
- * @param {Point[][]} contours
- * @returns {[Edge[], Edge[]]}
+ * @param contours
  */
-function contours_into_horiz_vert_edge_list(contours) {
+function contours_into_horiz_vert_edge_list(contours: Point[][]): [Edge[], Edge[]] {
     // the output are [horiz, vert] of all the horizontal and vertical edges, ordered by coordinate
-    /** @type {Edge[]} */
-    const horizontal = [];
-    /** @type {Edge[]} */
-    const vertical = [];
+    const horizontal: Edge[] = [];
+    const vertical: Edge[] = [];
     for (const contour of contours) {
-        /** @type {Edge[]} */
-        const edges = [];
+        const edges: Edge[] = [];
         for (let i = 0; i < contour.length; i++) {
             const p1 = contour[i];
             const p2 = contour[(i + 1) % contour.length];
@@ -365,7 +355,8 @@ function contours_into_horiz_vert_edge_list(contours) {
 }
 
 
-function _test_fn() {
+async function _test_fn() {
+    const { load_map_data } = await import("./load_map_data");
     const { data, spawns } = load_map_data("winter_inn");
     const spawn_pos = { x: spawns[0][0], y: spawns[0][1] };
     const [horizontal_edges, vertical_edges] = xylines_to_edges(data);
@@ -386,11 +377,17 @@ function _test_fn() {
     const contours2 = contours_remove_unused_verts(contours);
     const { vertices: v2, edge_indices: e2 } = contours_into_vert_edge_list(contours2);
 
-    const fs = require("fs");
+    const fs = await import("fs");
     const { to_waveform_obj } = require("./waveform_obj_import_export");
 
     const as_waveform = to_waveform_obj(v2, e2, "AdventureLandMapData");
     fs.writeFileSync("output_data.obj", as_waveform, { encoding: "utf8" })
 }
 
-module.exports = { detect_contours, contours_remove_unused_verts, contours_into_vert_edge_list, contours_into_horiz_vert_edge_list, build_adjacent_edges_list };
+export {
+    detect_contours,
+    contours_remove_unused_verts,
+    contours_into_vert_edge_list,
+    contours_into_horiz_vert_edge_list,
+    build_adjacent_edges_list
+};
