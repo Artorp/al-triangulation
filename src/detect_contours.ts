@@ -1,6 +1,7 @@
 import { intersect_and_cut, xylines_to_edges } from "./map_to_polygons";
 import { remove_doubles } from "./remove_doubles";
 import {
+    add_points_2d,
     angle_between,
     cross_product_2d,
     distance_2d,
@@ -33,6 +34,9 @@ function detect_contours(vertices: Point[], edge_indices: [number, number][], sp
 
     // build vertex->edge index that for each vertex, lists all edges (by index) connected to this vertex
     const vertices_with_connected_edges = build_adjacent_edges_list(vertices, edge_indices);
+    // bugfix: ray tracing from spawn would sometimes hit contours at a vertex exactly and register two hits,
+    // add a small constant offset to avoid this
+    spawn_position = add_points_2d(spawn_position, { x: 0.123, y: 0.123 })
     console.log("Using spawn position ", spawn_position);
 
     const found_contours: Point[][] = [];
@@ -201,7 +205,7 @@ function detect_contours(vertices: Point[], edge_indices: [number, number][], sp
                     edges_ordered.push([edge[1], edge[0]]);
                 }
             }
-            // remove the current edge
+            // remove the current edge from list of potential next edges
             let angle_compare_edge_indices: [number, number] = [-1, -1];
             for (let i = 0; i < edges_ordered.length; i++) {
                 if (edges_ordered[i][1] === vertex1_idx) {
@@ -239,7 +243,8 @@ function detect_contours(vertices: Point[], edge_indices: [number, number][], sp
             }
         }
         contour_mesh_vertices.splice(contour_mesh_vertices.length - 2, 2);
-        found_contours.push(contour_mesh_vertices);
+        const contour_removed_vertices = contour_remove_unused_verts(contour_mesh_vertices);
+        found_contours.push(contour_removed_vertices);
     }
 
     console.log(`Found ${found_contours.length} contours.`);
@@ -273,26 +278,27 @@ function build_adjacent_edges_list(vertices: Point[], edge_indices: [number, num
     return vertices_with_connected_edges;
 }
 
+
 /**
  * Remove all vertices of a contour if that vertex is not part of an angle / bend
- *
- * @param contours
  */
-function contours_remove_unused_verts(contours: Point[][]) {
-    const stripped_contours: Point[][] = [];
-    for (const contour of contours) {
-        const contour_stripped = [];
-        for (let i = 0; i < contour.length; i++) {
-            const p1 = contour[(i + contour.length - 1) % contour.length];
-            const p2 = contour[i];
-            const p3 = contour[(i + contour.length + 1) % contour.length];
-            if (!points_are_collinear(p1, p2, p3)) {
-                contour_stripped.push(p2);
-            }
+function contour_remove_unused_verts(contour: Point[]): Point[] {
+    if (contour.length < 3) return contour;
+    const contour_stripped: Point[] = [];
+    for (let i = 0; i < contour.length; i++) {
+        const p1 = contour[(i + contour.length - 1) % contour.length];
+        const p2 = contour[i];
+        const p3 = contour[(i + contour.length + 1) % contour.length];
+        // check angle p2->p1, p2->p3, 180 degrees means straight line
+        let angle = angle_between(subtract_points_2d(p1, p2), subtract_points_2d(p3, p2));
+        angle += 2 * Math.PI;
+        angle = angle % (2 * Math.PI);
+
+        if (!(Math.abs(angle - Math.PI) < 0.01)) {
+            contour_stripped.push(p2);
         }
-        stripped_contours.push(contour_stripped);
     }
-    return stripped_contours;
+    return contour_stripped;
 }
 
 
@@ -362,11 +368,33 @@ async function _test_fn() {
     const [horizontal_edges, vertical_edges] = xylines_to_edges(data);
     console.log(`${horizontal_edges.length} horizontal edges and ${vertical_edges.length} vertical edges`);
 
-    // Test example, square outside main contour (test for object removal):
-    horizontal_edges.push({ p1: { x: 270, y: -120 }, p2: { x: 280, y: -120 } });
-    horizontal_edges.push({ p1: { x: 270, y: -110 }, p2: { x: 280, y: -110 } });
-    vertical_edges.push({ p1: { x: 270, y: -120 }, p2: { x: 270, y: -110 } });
-    vertical_edges.push({ p1: { x: 280, y: -120 }, p2: { x: 280, y: -110 } });
+    // horizontal_edges.splice(0, horizontal_edges.length);
+    // vertical_edges.splice(0, vertical_edges.length);
+    //
+    //
+    // // add L
+    // horizontal_edges.push({p1: {x: 340, y: 192}, p2: {x: 380, y: 192}});
+    // horizontal_edges.push({p1: {x: 340, y: 212}, p2: {x: 380, y: 212}});
+    // vertical_edges.push({p1: {x: 340, y: 192}, p2: {x: 340, y: 212}});
+
+    // // Test example, square outside main contour (test for object removal):
+    // horizontal_edges.push({ p1: { x: 270, y: -120 }, p2: { x: 280, y: -120 } });
+    // horizontal_edges.push({ p1: { x: 270, y: -110 }, p2: { x: 280, y: -110 } });
+    // vertical_edges.push({ p1: { x: 270, y: -120 }, p2: { x: 270, y: -110 } });
+    // vertical_edges.push({ p1: { x: 280, y: -120 }, p2: { x: 280, y: -110 } });
+
+    // test example: square around spawn point
+
+    // const r = 3200;
+    // horizontal_edges.push({ p1: { x: -r, y: -r }, p2: { x: r, y: -r } });
+    // horizontal_edges.push({ p1: { x: -r, y: r }, p2: { x: r, y: r } });
+    // vertical_edges.push({ p1: { x: -r, y: -r }, p2: { x: -r, y: r } });
+    // vertical_edges.push({ p1: { x: r, y: -r }, p2: { x: r, y: r } });
+
+    // test example: try to find critical point
+
+    // horizontal_edges.push({ p1: { x: -32, y: -488 }, p2: { x: 37, y: -488 } });
+    // vertical_edges.push({p1: { x: 416, y: -40 }, p2: {x: 416, y: 32}})
 
     // find all intersections, build graph
 
@@ -374,8 +402,8 @@ async function _test_fn() {
     const { vertices, edge_indices } = remove_doubles(edges);
 
     const contours = detect_contours(vertices, edge_indices, spawn_pos);
-    const contours2 = contours_remove_unused_verts(contours);
-    const { vertices: v2, edge_indices: e2 } = contours_into_vert_edge_list(contours2);
+    // const contours2 = contours_remove_unused_verts(contours);
+    const { vertices: v2, edge_indices: e2 } = contours_into_vert_edge_list(contours);
 
     const fs = await import("fs");
     const { to_waveform_obj } = require("./waveform_obj_import_export");
@@ -386,7 +414,6 @@ async function _test_fn() {
 
 export {
     detect_contours,
-    contours_remove_unused_verts,
     contours_into_vert_edge_list,
     contours_into_horiz_vert_edge_list,
     build_adjacent_edges_list

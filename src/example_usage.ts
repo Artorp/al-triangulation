@@ -2,7 +2,7 @@ import { MapData } from "./al_jsdoc_types";
 import { Perf } from "./performance";
 import { intersect_and_cut, xylines_to_edges } from "./map_to_polygons";
 import { remove_doubles } from "./remove_doubles";
-import { contours_into_horiz_vert_edge_list, contours_remove_unused_verts, detect_contours } from "./detect_contours";
+import { contours_into_horiz_vert_edge_list, detect_contours } from "./detect_contours";
 import { contours_raycast_edges, fill_quads_and_remove_doubles } from "./contours_to_quads";
 import { to_waveform_obj_w_faces } from "./waveform_obj_import_export";
 import { load_map_data } from "./load_map_data";
@@ -30,7 +30,7 @@ function perform_inflation_and_contouring(map_name: string, map_data: MapData, m
     perf.stopAndPrint("Remove doubles");
 
     perf.start();
-    const contours = contours_remove_unused_verts(detect_contours(vertices, edge_indices, spawn_pos));
+    const contours = detect_contours(vertices, edge_indices, spawn_pos);
     perf.stopAndPrint("Contour 1");
 
     perf.start();
@@ -50,7 +50,7 @@ function perform_inflation_and_contouring(map_name: string, map_data: MapData, m
     perf.stopAndPrint("Removing doubles 2");
 
     perf.start();
-    const inflated_contours = contours_remove_unused_verts(detect_contours(vertices2, edge_indices2, spawn_pos));
+    const inflated_contours = detect_contours(vertices2, edge_indices2, spawn_pos);
     perf.stopAndPrint("Detecting inflated contours");
 
     perf.start();

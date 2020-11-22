@@ -1,7 +1,7 @@
 import { MapData } from "./al_jsdoc_types";
 import { intersect_and_cut, xylines_to_edges } from "./map_to_polygons";
 import { remove_doubles } from "./remove_doubles";
-import { contours_into_horiz_vert_edge_list, contours_remove_unused_verts, detect_contours } from "./detect_contours";
+import { contours_into_horiz_vert_edge_list, detect_contours } from "./detect_contours";
 import { inflate_contours } from "./inflate_contour";
 import { contours_raycast_edges, fill_quads_and_remove_doubles } from "./contours_to_quads";
 import { Point } from "./geometry";
@@ -25,12 +25,12 @@ function generate_navmesh(
     const [horizontal_edges, vertical_edges] = xylines_to_edges(map_data);
     const edges = intersect_and_cut(horizontal_edges, vertical_edges);
     const { vertices, edge_indices } = remove_doubles(edges);
-    const contours = contours_remove_unused_verts(detect_contours(vertices, edge_indices, from_position));
+    const contours = detect_contours(vertices, edge_indices, from_position);
     const inflated_overlapping_contours = inflate_contours(contours);
     const [horizontal_edges2, vertical_edges2] = contours_into_horiz_vert_edge_list(inflated_overlapping_contours);
     const inflated_edges = intersect_and_cut(horizontal_edges2, vertical_edges2);
     const { vertices: vertices2, edge_indices: edge_indices2 } = remove_doubles(inflated_edges);
-    const inflated_contours = contours_remove_unused_verts(detect_contours(vertices2, edge_indices2, from_position));
+    const inflated_contours = detect_contours(vertices2, edge_indices2, from_position);
     const { cut_contours, internal_edges_cut } = contours_raycast_edges(inflated_contours);
     const { vertices: v2, edge_indices: e2, faces } = fill_quads_and_remove_doubles(cut_contours, internal_edges_cut);
 
