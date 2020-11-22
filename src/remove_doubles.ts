@@ -1,11 +1,5 @@
-const { load_map_data } = require("./load_map_data");
-const { intersect_and_cut, xylines_to_edges } = require("./map_to_polygons");
-
-
-/**
- * @typedef {import("./geometry_types").Point} Point
- * @typedef {import("./geometry_types").Edge} Edge
- * */
+import { intersect_and_cut, xylines_to_edges } from "./map_to_polygons";
+import { Edge, Point } from "./geometry_types";
 
 
 // after cutting at all intersections, remove doubles and build polygon meshes
@@ -16,26 +10,18 @@ const { intersect_and_cut, xylines_to_edges } = require("./map_to_polygons");
  * Merge all vertices that have a distance of 0. In the resulting vertices and edge list, one edge may share a vertex
  * with another edge.
  *
- * @param {Edge[]} edge_array
- * @returns {{vertices: Point[], edge_indices: [number, number][]}}
+ * @param edge_array
  */
-function remove_doubles(edge_array) {
+function remove_doubles(edge_array: Edge[]): {vertices: Point[], edge_indices: [number, number][]} {
     // edges is a list of horizontal and vertical edges
     // The vertices inside each edge is ordered s.t. the first vertex has a smaller x- or y-value than the second.
 
-    /** @type {Point[]} */
-    const vertices = [];
-    /** @type {[number, number][]} */
-    const edge_indices = [];
+    const vertices: Point[] = [];
+    const edge_indices: [number, number][] = [];
 
-    /** @type Object<number, Object<number, number>> */
-    const vertex_pos_to_vertex_index_x_y = {};
+    const vertex_pos_to_vertex_index_x_y: { [key: number]: { [key: number]: number } } = {};
 
-    /**
-     * @param {Point} p
-     * @returns {number}
-     */
-    const store_vertex_return_vertex_index = (p) => {
+    const store_vertex_return_vertex_index = (p: Point): number => {
         if (vertex_pos_to_vertex_index_x_y[p.x] == null) {
             vertex_pos_to_vertex_index_x_y[p.x] = {};
         }
@@ -59,7 +45,8 @@ function remove_doubles(edge_array) {
 }
 
 
-function _test_fn() {
+async function _test_fn() {
+    const { load_map_data } = await import("./load_map_data");
     const { data, spawns } = load_map_data("winter_inn");
     const [horizontal_edges, vertical_edges] = xylines_to_edges(data);
     console.log(`${horizontal_edges.length} horizontal edges and ${vertical_edges.length} vertical edges`);
@@ -89,11 +76,11 @@ function _test_fn() {
     const edges = intersect_and_cut(horizontal_edges, vertical_edges);
     const { vertices, edge_indices } = remove_doubles(edges);
 
-    const fs = require("fs");
+    const fs = await import("fs");
     const { to_waveform_obj } = require("./waveform_obj_import_export");
 
     const as_waveform = to_waveform_obj(vertices, edge_indices, "AdventureLandMapData");
     fs.writeFileSync("output_data.obj", as_waveform, { encoding: "utf8" })
 }
 
-module.exports = { remove_doubles };
+export { remove_doubles };
