@@ -465,7 +465,7 @@ function fill_quads_and_remove_doubles(
      */
     const south_vertices_are_connected = (p1_s_idx: number, p2_s_idx: number): boolean => {
         const p1_s = vertices[p1_s_idx];
-        const p2_s = vertices[p2_s_idx];
+        // const p2_s = vertices[p2_s_idx];
         for (const connected_edge_idx of connected_edges[p1_s_idx]) {
             const connected_edge = edge_indices[connected_edge_idx];
             const [c_p1_idx, c_p2_idx] = connected_edge;
@@ -474,7 +474,6 @@ function fill_quads_and_remove_doubles(
             if (c_p1.y !== c_p2.y || c_p1.x !== p1_s.x) continue;
             // connected edge is horizontal and goes east,
             // check if it connects to p2_s
-            const are_connected = c_p2_idx === p2_s_idx;
             return c_p2_idx === p2_s_idx;
         }
         return false;
