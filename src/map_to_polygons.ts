@@ -15,11 +15,24 @@ function xylines_to_edges(map_data: MapData): [Edge[], Edge[]] {
     const { x_lines, y_lines, min_x, min_y, max_x, max_y } = map_data;
     const vertical_edges: Edge[] = [];
     const horizontal_edges: Edge[] = [];
+    let skipped_count = 0;
     for (const [x, y0, y1] of x_lines) {
+        if (y0 === y1) {
+            skipped_count++;
+            continue;
+        }
         vertical_edges.push({ p1: { x, y: y0 }, p2: { x, y: y1 } });
     }
     for (const [y, x0, x1] of y_lines) {
+        if (x0 === x1) {
+            skipped_count++;
+            continue;
+        }
         horizontal_edges.push({ p1: { x: x0, y }, p2: { x: x1, y } });
+    }
+
+    if (skipped_count !== 0) {
+        console.log(`Ignored ${skipped_count} zero-length edges.`)
     }
 
     // add rectangle around whole map using map boundaries
