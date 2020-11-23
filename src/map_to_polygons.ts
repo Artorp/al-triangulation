@@ -6,21 +6,28 @@ import { Edge, Point } from "./geometry";
  * Takes in Adventure Land map data, and unpacks the horizontal and vertical edges to
  * edges represented by two points.
  *
- * @param {MapData} map_data
- * @returns {[Edge[], Edge[]]}
+ * Will also create the outer edges for map boundary (for the test map which has no x- or y-lines)
+ *
+ * @param map_data
+ * @returns horizontal and vertical edges
  */
-function xylines_to_edges(map_data: MapData) {
-    const { x_lines, y_lines } = map_data;
-    const vertical_edges = [];
-    const horizontal_edges = [];
-    for (const x_line of x_lines) {
-        const [x, y0, y1] = x_line;
+function xylines_to_edges(map_data: MapData): [Edge[], Edge[]] {
+    const { x_lines, y_lines, min_x, min_y, max_x, max_y } = map_data;
+    const vertical_edges: Edge[] = [];
+    const horizontal_edges: Edge[] = [];
+    for (const [x, y0, y1] of x_lines) {
         vertical_edges.push({ p1: { x, y: y0 }, p2: { x, y: y1 } });
     }
-    for (const y_line of y_lines) {
-        const [y, x0, x1] = y_line;
+    for (const [y, x0, x1] of y_lines) {
         horizontal_edges.push({ p1: { x: x0, y }, p2: { x: x1, y } });
     }
+
+    // add rectangle around whole map using map boundaries
+    vertical_edges.push({ p1: { x: min_x, y: min_y }, p2: { x: min_x, y: max_y } });
+    vertical_edges.push({ p1: { x: max_x, y: min_y }, p2: { x: max_x, y: max_y } });
+    horizontal_edges.push({ p1: { x: min_x, y: min_y }, p2: { x: max_x, y: min_y } });
+    horizontal_edges.push({ p1: { x: min_x, y: max_y }, p2: { x: max_x, y: max_y } });
+
     return [horizontal_edges, vertical_edges];
 }
 
@@ -233,6 +240,7 @@ function intersect_and_cut(horizontal_edges: Edge[], vertical_edges: Edge[]): Ed
  * @param sweep_axis
  */
 function* group_by_one_axis(edges: Edge[], sweep_axis: "x" | "y"): Generator<[number, number], void, any> {
+    if (edges.length === 0) return;
     let last_value = edges[0].p1[sweep_axis];
     let last_idx = 0;
     for (let i = 1; i < edges.length; i++) {
