@@ -315,15 +315,19 @@ function binary_search_range(
     return [left_idx, right_idx_exclusive];
 }
 
+enum TurnType {
+    STRAIGHT, TURN, RIGHT, LEFT
+}
+
 /**
  * Helper function to find turn type based on three consecutive points of a contour
  *
  * @param p1 first point
  * @param p2 second point, point to check
  * @param p3 third point
- * @param a string indicating which way the turn goes
+ * @returns an enum indicating which way the turn goes
  */
-function get_turn_type(p1: Point, p2: Point, p3: Point): "straight" | "turn" | "right" | "left" {
+function get_turn_type(p1: Point, p2: Point, p3: Point): TurnType {
     // measure angle from p1 to p2, then from p1 to p3.
 
     const p1_p2 = subtract_points_2d(p2, p1);
@@ -334,16 +338,16 @@ function get_turn_type(p1: Point, p2: Point, p3: Point): "straight" | "turn" | "
     const eps = 1e-9;
     if (angle_diff < eps || angle_diff - 2 * Math.PI > eps) {
         // straight
-        return "straight";
+        return TurnType.STRAIGHT;
     } else if (Math.PI - angle_diff < eps && angle_diff - Math.PI < eps) {
         // 180 degree turn
-        return "turn";
+        return TurnType.TURN;
     } else if (0 - angle_diff < eps && angle_diff - Math.PI < eps) {
         // right
-        return "right";
+        return TurnType.RIGHT;
     } else { // if (Math.PI - angle_diff < eps && angle_diff - 2 * Math.PI < eps)
         // left
-        return "left";
+        return TurnType.LEFT;
     }
 }
 
@@ -391,15 +395,17 @@ function fill_quads_and_remove_doubles(
                 const p2 = contour[i];
                 const p3 = contour[(i + 1) % contour.length];
                 const turn_type = get_turn_type(p1, p2, p3);
-                winding_number += {
-                    "straight": 0,
-                    "turn": 0,
-                    "left": 1,
-                    "right": -1
-                }[turn_type];
+                switch (turn_type) {
+                    case TurnType.LEFT:
+                        winding_number += 1;
+                        break;
+                    case TurnType.RIGHT:
+                        winding_number -= 1;
+                        break;
+                }
             }
             if (winding_number < 0) {
-                // 4 right turns, so this is a hole. Add all four points to vertex hole set
+                // 4 right turns, so this is a hole. Add all points to vertex hole set
                 for (const v of contour) {
                     add_vertex_to_contour_hole_set(v);
                 }
@@ -451,6 +457,29 @@ function fill_quads_and_remove_doubles(
         return found_south_v;
     }
 
+    /**
+     * Helper function that checks if two south vertices are connected
+     *
+     * @param p1_s_idx the south vertex to the west
+     * @param p2_s_idx the south vertex to the east
+     */
+    const south_vertices_are_connected = (p1_s_idx: number, p2_s_idx: number): boolean => {
+        const p1_s = vertices[p1_s_idx];
+        const p2_s = vertices[p2_s_idx];
+        for (const connected_edge_idx of connected_edges[p1_s_idx]) {
+            const connected_edge = edge_indices[connected_edge_idx];
+            const [c_p1_idx, c_p2_idx] = connected_edge;
+            const c_p1 = vertices[c_p1_idx];
+            const c_p2 = vertices[c_p2_idx];
+            if (c_p1.y !== c_p2.y || c_p1.x !== p1_s.x) continue;
+            // connected edge is horizontal and goes east,
+            // check if it connects to p2_s
+            const are_connected = c_p2_idx === p2_s_idx;
+            return c_p2_idx === p2_s_idx;
+        }
+        return false;
+    }
+
     for (const [p1_idx, p2_idx] of edge_indices) {
         // For each horizontal edge, check if it is possible to create a face by using two vertices to the south (positive y axis).
         const p1 = vertices[p1_idx];
@@ -463,11 +492,22 @@ function fill_quads_and_remove_doubles(
         const p2_s = vertices[p2_south_idx];
         if (p1_s.y !== p2_s.y) continue;
 
+        // check that all four vertices form a connected rectangle
+        if (!south_vertices_are_connected(p1_south_idx, p2_south_idx)) continue;
+
         // check if the 4 vertices form a hole, if so, don't fill this face
+        const debug = p1.x === -196 && p1.y === 238 && p2_s.x === -140 && p2_s.y === 251;
+        if (debug) {
+            console.log([p1, p2, p1_s, p2_s].map(p => vertex_is_contour_hole(p)));
+        }
         let all_are_holes = true;
         for (const v of [p1, p2, p1_s, p2_s]) {
             all_are_holes = all_are_holes && vertex_is_contour_hole(v);
+            // if (v.x === -196 && v.y === 238) {
+            //     console.log([p1, p2, p1_s, p2_s])
+            // }
         }
+        if (debug) console.log(all_are_holes)
         if (all_are_holes) continue;
 
         // define in order top right, top left, bottom left, bottom right (counter clockwise)
