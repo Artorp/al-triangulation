@@ -13,8 +13,8 @@ import {
     normalize,
     Point,
     points_are_collinear,
-    subtract_points_2d,
-    vertices_equal
+    subtract_points_2d, to_integer,
+    vertices_equal, winding_number
 } from "./geometry";
 
 
@@ -34,12 +34,14 @@ function detect_contours(vertices: Point[], edge_indices: [number, number][], sp
 
     // build vertex->edge index that for each vertex, lists all edges (by index) connected to this vertex
     const vertices_with_connected_edges = build_adjacent_edges_list(vertices, edge_indices);
-    // bugfix: ray tracing from spawn would sometimes hit contours at a vertex exactly and register two hits,
-    // add a small constant offset to avoid this
-    spawn_position = add_points_2d(spawn_position, { x: 0.123, y: 0.123 })
     console.log("Using spawn position ", spawn_position);
 
-    const found_contours: Point[][] = [];
+    type FoundContour = { contour: Point[], contour_reversed_y: Point[], is_outside_wall: boolean };
+    const found_contours: FoundContour[] = [];
+
+    // geometry module expects +y to be north, cache versions of contours with that property
+    const reflect_point_y = ({ x, y }: Point): Point => ({ x, y: -y });
+    const reflect_contour_y = (c: Point[]): Point[] => c.map(reflect_point_y);
 
     // searchable_edges are all edges (by index) that can be used as raycast targets
     const searchable_edges: number[] = [];
@@ -76,9 +78,9 @@ function detect_contours(vertices: Point[], edge_indices: [number, number][], sp
         // could also just increase by a little bit
         raycast_ray = multiply_scalar_2d(raycast_ray, 100000);
 
-        // perform raycast...
+        // perform raycast
 
-        type Intersection = { e_idx: number, intersection_point: Point, dist: number, is_contour: boolean };
+        type Intersection = { e_idx: number, intersection_point: Point, dist: number };
 
         const intersections: Intersection[] = [];
 
@@ -90,55 +92,27 @@ function detect_contours(vertices: Point[], edge_indices: [number, number][], sp
             const intersection_point = intersect_lines(spawn_position, raycast_ray, ep, er);
             if (intersection_point != null) {
                 const dist = distance_2d(spawn_position, intersection_point);
-                intersections.push({ e_idx, intersection_point, dist, is_contour: false });
+                intersections.push({ e_idx, intersection_point, dist });
             }
+        }
+        if (intersections.length === 0) {
+            throw new Error(`Raycasted towards edge, but did not obtain an intersection. Target point ${raycast_target_point}`);
         }
 
-        // ...on all previously found contours
-        for (const contour of found_contours) {
-            const edges = [];
-            for (let i = 1; i < contour.length; i++) {
-                const v1 = contour[i - 1];
-                const v2 = contour[i];
-                edges.push([v1, v2]);
-            }
-            edges.push([contour[contour.length - 1], contour[0]]);
-            for (const edge of edges) {
-                const [v1, v2] = edge;
-                const [ep, er] = line_point_pair_to_offset(v1, v2);
-                const intersection_point = intersect_lines(spawn_position, raycast_ray, ep, er);
-                if (intersection_point) {
-                    const dist = distance_2d(spawn_position, intersection_point);
-                    intersections.push({ e_idx: -1, intersection_point, dist, is_contour: true });
-                }
-            }
-        }
+        // then, select the closest edge, and check if the edge chosen can be walked to (is not outside outer contour
+        // or inside a hole contour)
 
         // sort by distance
         intersections.sort((a, b) => a.dist - b.dist);
 
-        // find closest intersection, check if inside previously found contour
-        let is_inside_walkable_space = true;
-        let closest_intersection;
-        for (const intersection of intersections) {
-            if (intersection.is_contour) {
-                is_inside_walkable_space = !is_inside_walkable_space;
-                continue;
-            }
-            closest_intersection = intersection;
-            break;
-        }
+        const closest_intersection = intersections[0];
 
-        if (closest_intersection == null) {
-            throw new Error("Found no intersection when raycasting.")
-        }
-
-        // use simple depth-first search to remove all edges from current polygon from the list of searchable edges
+        // remove this mesh from the list of searchable edges (using simple DFS), before checking if edge should be used
         const open_edge_set = [closest_intersection.e_idx];
-        const seen_edge_indices: { [key: number]: boolean | undefined } = {};
+        const seen_edge_indices = new Set<number>();
         while (open_edge_set.length > 0) {
             const edge_idx = open_edge_set.pop()!; // edge is an index of edge_indices
-            seen_edge_indices[edge_idx] = true;
+            seen_edge_indices.add(edge_idx);
             // add edge index to list of edges to remove
             // find all connected edges
             const found_edges = [];
@@ -148,20 +122,37 @@ function detect_contours(vertices: Point[], edge_indices: [number, number][], sp
                 found_edges.push(...edge_list);
             }
             // remove all seen edges from the found edges
-            const unseen_found_edges = found_edges.filter(edge_idx => !seen_edge_indices[edge_idx]);
+            const unseen_found_edges = found_edges.filter(edge_idx => !seen_edge_indices.has(edge_idx));
             open_edge_set.push(...unseen_found_edges);
         }
 
         // remove all edges that are part of this polygon from the list of raycast targets
         for (let i = searchable_edges.length - 1; i >= 0; i--) {
             const edge_idx = searchable_edges[i];
-            if (seen_edge_indices[edge_idx]) {
+            if (seen_edge_indices.has(edge_idx)) {
                 searchable_edges.splice(i, 1);
             }
         }
 
-        if (!is_inside_walkable_space) {
-            // the intersected edge is outside a previously found contour, skip generating contour
+        // then, check if edge can be walked towards by checking against all previously found contours
+
+        // ...on all previously found contours, where +y is north
+        // must also reflect the intersection point against the x-axis
+        const intersection_point_reflect_y = reflect_point_y(closest_intersection.intersection_point);
+        let edge_is_reachable = true;
+        for (const contour_data of found_contours) {
+            const { contour, contour_reversed_y, is_outside_wall } = contour_data;
+            const wn = winding_number(intersection_point_reflect_y, contour_reversed_y);
+            const intersection_point_is_outside = wn === 0;
+            const point_outside_outer_contour = is_outside_wall && intersection_point_is_outside;
+            const point_inside_inner_contour = !is_outside_wall && !intersection_point_is_outside;
+            if (point_outside_outer_contour || point_inside_inner_contour) {
+                edge_is_reachable = false;
+                break;
+            }
+        }
+        if (!edge_is_reachable) {
+            // the intersected edge is inside a previously found contour, skip generating contour
             console.log("Found an edge that is outside walkable space, skipping contour generation for this polygon",
                 "\nIntersected at point", closest_intersection.intersection_point);
             continue;
@@ -244,12 +235,21 @@ function detect_contours(vertices: Point[], edge_indices: [number, number][], sp
         }
         contour_mesh_vertices.splice(contour_mesh_vertices.length - 2, 2);
         const contour_removed_vertices = contour_remove_unused_verts(contour_mesh_vertices);
-        found_contours.push(contour_removed_vertices);
+
+        const contour_reversed_y = reflect_contour_y(contour_removed_vertices);
+        // check if spawn point is inside this contour
+        const winding_num = winding_number(reflect_point_y(spawn_position), contour_reversed_y);
+        const is_outside_wall = winding_num !== 0;
+
+        found_contours.push({
+            contour: contour_removed_vertices,
+            contour_reversed_y: contour_reversed_y,
+            is_outside_wall
+        });
     }
 
     console.log(`Found ${found_contours.length} contours.`);
-
-    return found_contours;
+    return found_contours.map(el => el.contour);
 }
 
 /**

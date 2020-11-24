@@ -58,6 +58,75 @@ function intersect_lines(p: Point, r: Point, q: Point, s: Point): Point | null {
 
 
 /**
+ * Assumes +x is east and +y is north. If working in a coordinate system where +y is south, assume result
+ * is multiplied by -1.
+ *
+ * Returns a value greater than 0 if p3 is to the left of the line p1->p2, == 0 if p3 is on the line p1->p2,
+ * or a value less than 0 if p3 is to the right of the line p1->p2.
+ *
+ * This returns 2 * the signed area of the triangle formed by p1 -> p2 -> p3 -> p1, positive if the
+ * triangle is ccw, negative if the triangle is cw.
+ *
+ * @see http://geomalgorithms.com/a01-_area.html#Modern-Triangles
+ *
+ * @param p1 first point
+ * @param p2 second point
+ * @param p3 third point - or the point to compare against the line p1 -> p2
+ * @returns gt 0 if p3 left of p1p2, eq 0 if p3 on the line, and lt 0 if p3 to the right of the line
+ */
+export function point_is_left(p1: Point, p2: Point, p3: Point): number {
+    return (p2.x - p1.x) * (p3.y - p1.y) - (p3.x - p1.x) * (p2.y - p1.y);
+}
+
+/**
+ * Assumes +x is east and +y is north. If working in a coordinate system where +y is south, this will give invalid
+ * results.
+ *
+ * Returns the winding number of a polygon with respect to a point p. Can be used to determine if a point is inside or
+ * outside a polygon. A point is outside the polygon if the polygon doesn't wind around the point at all, or if the
+ * winding number is equal 0. A non-zero winding number means the point is inside the polygon.
+ *
+ * @see http://geomalgorithms.com/a03-_inclusion.html
+ *
+ * @param p point to calculate winding number in relation to
+ * @param poly a polygon with points defined in ccw order, with the last and first point connected
+ * @returns zero if point is outside the polygon, non-zero if the point is inside the polygon
+ */
+export function winding_number(p: Point, poly: Point[]) {
+    let wn = 0;
+
+    for (let i = 0; i < poly.length; i++) {
+        const p1 = poly[i];
+        const p2 = poly[(i + 1) % poly.length];
+        /*
+        * Intersection test with following rules, given a point P and a horizontal ray from P to the right +infinity:
+        *  1) An upward edge includes its starting endpoint and excludes its final endpoint
+        *  2) A downward edge excludes its starting endpoint and includes its final endpoint
+        *  3) Horizontal edges are excluded
+        *  4) The edge <-> ray intersection point must be strictly right of the point
+        * From: http://geomalgorithms.com/a03-_inclusion.html#Edge-Crossing-Rules
+        * */
+        if (p1.y === p2.y) continue;
+        if (p2.y > p1.y) {
+            // only change winding number if p is strictly left of p1->p2
+            // p1 <= p < p2
+            if (!(p1.y <= p.y && p.y < p2.y)) continue;
+            if (point_is_left(p1, p2, p) > 0) {
+                wn++;
+            }
+        } else {
+            // only change winding number if p is strictly right of p1->p2
+            // p2 <= p < p1
+            if (!(p2.y <= p.y && p.y < p1.y)) continue;
+            if (point_is_left(p1, p2, p) < 0) {
+                wn--;
+            }
+        }
+    }
+    return wn;
+}
+
+/**
  * Takes the '2d cross product' of v1 x v2, defined as the z-value of the 3d cross product, which
  * only depends on the two first two axis x and y.
  */
