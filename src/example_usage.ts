@@ -55,8 +55,10 @@ function perform_inflation_and_contouring(map_name: string, map_data: MapData, m
 
     perf.start();
     const { cut_contours, internal_edges_cut } = contours_raycast_edges(inflated_contours);
+    perf.stopAndPrint("Create edges on walkable space");
+    perf.start();
     const { vertices: v2, edge_indices: e2, faces } = fill_quads_and_remove_doubles(cut_contours, internal_edges_cut);
-    perf.stopAndPrint("Create edges on walkable space and fill with quads");
+    perf.stopAndPrint("Fill edges with quads");
 
     const as_waveform = to_waveform_obj_w_faces(v2, e2, faces, "AdventureLandMapData");
     fs.writeFileSync(`../output_waveform_objs/${map_name}.obj`, as_waveform, { encoding: "utf8" });
